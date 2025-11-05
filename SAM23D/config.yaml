@@ -1,0 +1,74 @@
+input: data/input/deSkatting_segmented.las
+attribute: Classification
+outdir: data/input/classes
+
+extract_panoramas:
+  input: data/input/deSkatting.e57
+  outdir: data/input/panoramas
+
+# Per-class outputs to create first
+ids: [1, 2, 7, 8, 10, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
+
+# Optional: combinations (keep only IDs present in 'ids' or see note below)
+groups:
+  structural:
+    ids: [1, 2, 3, 4, 5, 6]
+  non_structural:
+    ids: [5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 30]
+
+# Parameters for the room-splitting step (Option A)
+# NOTE input should be as combined_<groups_name> so look above, structural gives: combined_structural.ply
+rooms:
+  combined_group: structural
+  input_combined: data/input/classes/combined_structural.ply 
+  input: data/input/
+  outdir:        data/output/
+  voxel: 0.15
+  grid: 0.10
+  min_area: 1.0
+  expand_dist: 0.50
+
+
+ply2bvg:
+  # Root under which floors/rooms live
+  in_root: "data/output"
+  # We will scan these directories to find rooms
+  room_pattern: "floor_{floor}/room_{room}"
+  # Within each room, only convert these PLY files:
+  ply_glob: "shell_*.ply"
+
+  # Output root to mirror the same floor/room structure for BVG
+  out_root: "data/output"
+
+  # RANSAC params (unchanged)
+  min_support: 1500
+  dist_threshold: 0.020
+  bitmap_resolution: 0.02
+  normal_threshold: 0.8
+  overlook_probability: 0.001
+
+polyfit:
+  # OBJ output will mirror the floor/room structure here
+  out_root: "data/output"
+  solver: SCIP
+  w_data: 0.25
+  w_cover: 0.25
+  w_complex: 0.5
+
+rooms_csvs:
+  out_root: "data/output"
+  angle_deg: 1.0
+  dist_eps: 0.005   # optional; if omitted, defaults to 1e-4 * bbox diagonal
+  wall_tol_deg: 10.0
+  floor_tol_deg: 20.0
+
+pcg:
+  in:  "data/output"
+  out: "data/output"
+  exe:
+    linux:   "LM2PCG/build/pcg_room"                 # ELF
+    macos:   "LM2PCG/build/pcg_room"                 # Mach-O
+    windows: "C:\\path\\to\\LM2PCG\\build\\pcg_room.exe"  # optional native .exe
+    wsl:     "LM2PCG/build/pcg_room"                 # ELF inside WSL
+
+

@@ -1,293 +1,307 @@
-# SAM23D - SAM2 to 3D Point Cloud Pipeline
+# SpatialLLM - Spatial Understanding with Language Models
 
-A pipeline for converting 2D image segmentation masks (from SAM2) to filtered 3D point clouds.
+[![Release](https://img.shields.io/github/v/release/Jackson513ye/LM2PCG?sort=semver)](https://github.com/Jackson513ye/LM2PCG/releases)
 
-## Overview
+A comprehensive framework for spatial understanding combining point cloud processing, 3D segmentation, and natural language interfaces. This project integrates indoor scene reconstruction, interactive 3D visualization, and AI-powered spatial reasoning.
 
-This module provides the core functionality for:
-1. **Image Segmentation**: Using SAM2 (Segment Anything Model 2) to segment objects in panoramic images
-2. **Point Cloud Filtering**: Projecting 3D point clouds onto 2D panoramas and filtering based on segmentation masks
-3. **Coordinate Conversion**: Mathematical utilities for transforming between different coordinate systems
+## 🌟 Overview
 
-## Components
+SpatialLLM consists of three integrated modules:
 
-### 1. SAM2 Image Segmentation (`sam2_predictor.py`)
+1. **[LM2PCG](./LM2PCG)** - Indoor Point Cloud Processing Pipeline
+2. **[SAM23D](./SAM23D)** - 2D-to-3D Segmentation with SAM2
+3. **[GUI_SpatialLLM](./GUI_SpatialLLM)** - Interactive Spatial Understanding GUI
 
-Performs semantic segmentation on panoramic images using Meta's SAM2 model.
+## 📦 Modules
 
-**Features:**
-- Loads SAM2.1 Hiera Large model
-- Accepts user-defined points (up to 5) for guided segmentation
-- Generates binary masks and overlay images
-- Automatically saves results to `outputs/` directory
+### 1. LM2PCG - Point Cloud Processing
 
-**Usage:**
-```python
-from sam2_predictor import run_sam2_prediction
-import numpy as np
+A C++17 pipeline for indoor point-cloud processing with PCL and CGAL. Provides clustering, reconstruction, geometric analysis, and AI-powered spatial queries.
 
-# Define 5 points (x, y pixel coordinates)
-points = np.array([[100, 200], [150, 250], [200, 300], [250, 350], [300, 400]])
-image_filename = "panorama.jpg"
+**Key Features:**
+- 🎨 Color-preserving PLY I/O with full XYZRGB support
+- 📦 FEC-style clustering with upright bounding boxes
+- 🔄 Poisson mesh reconstruction with acceptance checks
+- 📐 Accurate geometry analysis (volume, area, dominant color)
+- 🤖 Unified AI API with `<OPERATION> <ID>` format
+- 🌐 Interactive web viewer with real-time selection
+- 📊 JSON-first output for AI agents
 
-result = run_sam2_prediction(points, image_filename)
-# Returns: {success, overlay_path, mask_path, mask_shape, score, image_size}
+**Quick Start:**
+```bash
+cd LM2PCG
+./pcg.sh "./data/rooms/Full House"  # Auto-build and process
 ```
 
-**Model Requirements:**
-- Checkpoint: `SAM2/checkpoints/sam2.1_hiera_large.pt`
-- Config: `SAM2/configs/sam2.1/sam2.1_hiera_l.yaml`
+[📖 Full LM2PCG Documentation](./LM2PCG/README.md)
 
-### 2. Point Cloud Filtering (`select_points_in_mask.py`)
+### 2. SAM23D - 2D Segmentation to 3D Point Cloud
 
-Projects 3D point clouds onto 2D panoramic images and filters points based on SAM2 masks.
+Pipeline for converting 2D image segmentation masks (from SAM2) to filtered 3D point clouds.
 
-**Features:**
-- Loads PLY point clouds and camera pose metadata
-- Projects 3D points to equirectangular panorama coordinates
-- Filters points inside segmentation mask
-- Exports filtered point clouds as LAS files
+**Key Features:**
+- 🖼️ SAM2.1 image segmentation on panoramic images
+- 🔍 3D point cloud projection and filtering
+- 📍 Camera pose-aware coordinate transformation
+- 📤 LAS format output for filtered point clouds
 
-**Usage:**
-```python
-from select_points_in_mask import filter_point_cloud_with_mask
-from pathlib import Path
+**Components:**
+- `sam2_predictor.py` - SAM2 segmentation
+- `select_points_in_mask.py` - Point cloud filtering
+- `conversion_2D_3D.py` - Coordinate transformations
 
-mask_path = "outputs/panorama_binary_mask.png"
-image_stem = "panorama"
-base_dir = Path("/path/to/GUI")
-
-las_path = filter_point_cloud_with_mask(mask_path, image_stem, base_dir)
-# Returns: path to filtered LAS file
+**Quick Start:**
+```bash
+cd SAM23D
+python sam2_predictor.py  # Run segmentation
 ```
 
-**Data Requirements:**
-- Binary mask image (from SAM2)
-- PLY point cloud file (shell_*.ply or combined_*.ply)
-- Camera pose JSON (translation + quaternion rotation)
-- Original panoramic image
+[📖 Full SAM23D Documentation](./SAM23D/README.md)
 
-### 3. Coordinate Conversion (`conversion_2D_3D.py`)
+### 3. GUI_SpatialLLM - Interactive Spatial Understanding
 
-Mathematical utilities for coordinate transformations.
+Web-based GUI for spatial understanding with panoramic images and 3D point clouds.
 
-**Functions:**
-- `quat_to_matrix(qx, qy, qz, qw)`: Convert quaternion to rotation matrix
-- `yaw_only_world_from_cam(R)`: Extract yaw rotation from full rotation matrix
-- `pixel_to_ray(u, v, W, H)`: Convert pixel coordinates to 3D ray direction
+**Key Features:**
+- 🌐 360° panorama viewer with interactive point selection
+- 🎯 Real-time SAM2 segmentation overlay
+- 💬 Natural language spatial queries via Azure OpenAI
+- 🗄️ SQLite database for spatial data management
+- 🔗 Flask + Streamlit architecture
 
-**Usage:**
-```python
-from conversion_2D_3D import quat_to_matrix, pixel_to_ray
-
-# Convert quaternion to rotation matrix
-R = quat_to_matrix(0.003, 0.005, 0.804, 0.594)
-
-# Convert pixel to ray direction (equirectangular)
-ray = pixel_to_ray(2048, 1024, 4096, 2048)  # center pixel
+**Quick Start:**
+```bash
+cd GUI_SpatialLLM
+python bridge_server_final.py  # Terminal 1
+streamlit run GUI_streamlit.py  # Terminal 2
 ```
 
-## Directory Structure
+[📖 Full GUI Documentation](./GUI_SpatialLLM/README.md)
 
-```
-SAM23D/
-├── README.md                    # This file
-├── sam2_predictor.py           # SAM2 segmentation
-├── select_points_in_mask.py    # Point cloud filtering
-├── conversion_2D_3D.py         # Coordinate utilities
-├── SAM2/                       # SAM2 model files
-│   ├── checkpoints/
-│   │   └── sam2.1_hiera_large.pt
-│   ├── configs/
-│   │   └── sam2.1/
-│   │       └── sam2.1_hiera_l.yaml
-│   └── sam2/                   # SAM2 Python package
-└── outputs/                    # Generated masks and overlays
-    ├── *_binary_mask.png
-    └── *_overlay.png
-```
+## 🚀 Complete Pipeline Setup
 
-## Installation
+### Requirements
 
-### Dependencies
+**System:**
+- Python 3.12+
+- CMake 3.16+, C++17 compiler
+- Bash shell (Linux, macOS, WSL, or Git Bash on Windows)
+
+**Dependencies:**
+- PCL 1.10+, CGAL 5.3+, Boost, Eigen3
+- PyTorch, SAM2, Streamlit, Flask
+- PolyFit wheel from [LiangliangNan/PolyFit](https://github.com/LiangliangNan/PolyFit/releases)
+- Easy3D wheel from [LiangliangNan/Easy3D](https://github.com/LiangliangNan/Easy3D/releases)
+
+### Installation
+
+#### 1. Clone with Submodules
 
 ```bash
-pip install torch torchvision
-pip install pillow numpy
-pip install laspy plyfile
-pip install hydra-core omegaconf
+git clone --recurse-submodules https://github.com/segher2/SpatialLLM.git
+cd SpatialLLM
+
+# If already cloned without submodules:
+git submodule update --init --recursive
 ```
 
-### SAM2 Model
-
-Download the SAM2.1 Hiera Large checkpoint:
-```bash
-mkdir -p SAM2/checkpoints
-# Download sam2.1_hiera_large.pt to SAM2/checkpoints/
-```
-
-## Pipeline Workflow
-
-```
-User Selects 5 Points on Panorama
-           ↓
-    [sam2_predictor.py]
-    - Load panoramic image
-    - Run SAM2 segmentation
-    - Generate binary mask
-           ↓
-    outputs/image_binary_mask.png
-           ↓
-    [select_points_in_mask.py]
-    - Load 3D point cloud (PLY)
-    - Load camera pose (JSON)
-    - Project 3D points to 2D
-    - Filter by mask
-           ↓
-    filtered_outputs/image_filtered.las
-```
-
-## Data Format
-
-### Camera Pose JSON
-```json
-{
-  "name": "panorama.jpg",
-  "translation": {
-    "x": 9.69,
-    "y": 8.13,
-    "z": 2.07
-  },
-  "rotation": {
-    "x": 0.003,
-    "y": 0.005,
-    "z": 0.804,
-    "w": 0.594
-  }
-}
-```
-
-### Point Cloud (PLY)
-Standard PLY format with at minimum:
-- Vertex positions (x, y, z)
-- Optional: RGB colors, normals
-
-### Binary Mask (PNG)
-- Grayscale or single-channel image
-- White (255) = inside mask
-- Black (0) = outside mask
-
-## Coordinate Systems
-
-### World Coordinates
-- Right-handed coordinate system
-- Z-axis points up
-- Units: meters
-
-### Camera Coordinates
-- X-axis: forward (camera viewing direction)
-- Y-axis: right
-- Z-axis: up
-- Origin: camera optical center
-
-### Panorama Coordinates (Equirectangular)
-- Width (u): [0, W] → Longitude [-π, π]
-- Height (v): [0, H] → Latitude [-π/2, π/2]
-- (0, 0) at top-left
-- Center facing direction: u = W/2
-
-## Mathematical Details
-
-### Quaternion to Rotation Matrix
-```
-q = (qx, qy, qz, qw)
-R = [1-2(yy+zz)  2(xy-wz)    2(xz+wy)  ]
-    [2(xy+wz)    1-2(xx+zz)  2(yz-wx)  ]
-    [2(xz-wy)    2(yz+wx)    1-2(xx+yy)]
-```
-
-### 3D Point Projection
-```
-1. Transform to camera frame:
-   P_cam = R_cw @ (P_world - t_wc)
-
-2. Convert to spherical coordinates:
-   r = ||P_cam||
-   lon = -atan2(Y, X)
-   lat = asin(Z / r)
-
-3. Map to pixel coordinates:
-   u = (lon / 2π + 0.5) * W
-   v = (0.5 - lat / π) * H
-```
-
-## Integration with GUI
-
-This module is designed to be used by the GUI project via symbolic links:
+#### 2. Set up Python Environment
 
 ```bash
-# In GUI directory
-ln -sf ../SAM23D/sam2_predictor.py sam2_predictor.py
-ln -sf ../SAM23D/select_points_in_mask.py select_points_in_mask.py
-ln -sf ../SAM23D/conversion_2D_3D.py conversion_2D_3D.py
-ln -sf ../SAM23D/SAM2 SAM2
-ln -sf ../SAM23D/outputs sam23d_outputs
+python3.12 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv/Scripts/activate
+pip install --upgrade pip wheel setuptools
+pip install -r requirements.txt
+pip install /path/to/PolyFit-<version>-cp312-*.whl
+pip install /path/to/easy3D-<version>-cp312-*.whl
 ```
 
-The GUI's Flask bridge server imports these modules to provide:
-- Automatic SAM2 segmentation when 5 points are clicked
-- Point cloud filtering based on segmentation results
-- Base64-encoded overlay images for real-time display
+#### 3. Install System Dependencies
 
-## Performance Notes
+**macOS:**
+```bash
+brew install cmake cgal boost eigen pcl
+```
 
-- **SAM2 Inference**: ~2-5 seconds on CPU, ~0.5-1 second on GPU
-- **Point Cloud Filtering**: Depends on point cloud size
-  - 1M points: ~1-2 seconds
-  - 10M points: ~10-20 seconds
-- **Memory Usage**: 
-  - SAM2 model: ~2-4 GB GPU memory
-  - Point clouds: ~100 MB per million points
+**Ubuntu 22.04+:**
+```bash
+sudo apt-get install cmake build-essential libpcl-dev libcgal-dev libeigen3-dev libboost-all-dev
+```
 
-## Troubleshooting
+#### 4. Build C++ Components
+
+```bash
+cd LM2PCG
+mkdir -p build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . -j
+cd ../..
+```
+
+#### 5. Download SAM2 Model
+
+```bash
+cd SAM23D/SAM2/checkpoints
+# Download sam2.1_hiera_large.pt
+cd ../../..
+```
+
+## 📊 Complete Workflow
+
+### Option 1: Automated Pipeline (Recommended)
+
+```bash
+# 1. Place input data
+mkdir -p data/input
+cp /path/to/scan.e57 data/input/
+cp /path/to/scan_segmented.las data/input/
+
+# 2. Run Snakemake pipeline
+snakemake --cores all --configfile config.yaml
+
+# Output: data/output/_PCG_DONE marker indicates completion
+```
+
+### Option 2: Step-by-Step Manual Workflow
+
+```bash
+# 1. Process point clouds (LM2PCG)
+cd LM2PCG
+./pcg.sh "./data/rooms/Full House"
+
+# 2. Start GUI for interactive segmentation
+cd ../GUI_SpatialLLM
+python bridge_server_final.py &  # Background
+streamlit run GUI_streamlit.py
+
+# 3. Select points in panorama → SAM2 segments → Filter 3D points
+# 4. Query spatial relationships via AI API
+cd ../LM2PCG
+python scripts/ai_api.py VIS 0-7-12  # Visualize object
+python scripts/ai_api.py VOL 0-7-12  # Get volume
+python scripts/ai_api.py BBD 0-7-12 0-7-15  # Distance between objects
+```
+
+## 🤖 AI API Examples
+
+```bash
+cd LM2PCG
+
+# Mesh reconstruction
+python scripts/ai_api.py RCN 0-7-12
+
+# Geometric analysis
+python scripts/ai_api.py VOL 0-7-12     # Volume
+python scripts/ai_api.py ARE 0-7-12     # Surface area
+python scripts/ai_api.py CLR 0-7-12     # Dominant color
+
+# Spatial relationships
+python scripts/ai_api.py BBD 0-7-12 0-7-15  # Distance
+
+# Interactive visualization
+python scripts/ai_api.py VIS 0-7        # Room visualization
+python scripts/ai_api.py VIS 0-7-12     # Object visualization
+
+# Room summary
+python scripts/ai_api.py RMS
+```
+
+## 📁 Project Structure
+
+```
+SpatialLLM/
+├── LM2PCG/                  # Point cloud processing (submodule)
+│   ├── build/               # C++ executables
+│   ├── scripts/             # AI API scripts
+│   ├── web/                 # 3D viewer
+│   └── data/                # Room datasets
+│
+├── SAM23D/                  # 2D-3D segmentation (submodule)
+│   ├── sam2_predictor.py
+│   ├── select_points_in_mask.py
+│   ├── conversion_2D_3D.py
+│   └── SAM2/                # SAM2 model files
+│
+├── GUI_SpatialLLM/          # Interactive GUI (submodule)
+│   ├── GUI_streamlit.py
+│   ├── bridge_server_final.py
+│   ├── extracted_data/      # Panoramas & metadata
+│   └── outputs/             # Segmentation results
+│
+├── config.yaml              # Pipeline configuration
+├── Snakefile               # Automated workflow
+└── requirements.txt         # Python dependencies
+```
+
+## 🔧 Configuration
+
+Edit `config.yaml` to customize:
+- Input/output paths
+- Processing parameters
+- AI model settings
+- Database connections
+
+## 📝 Output Files
+
+After running the pipeline, outputs are organized as:
+
+```
+data/output/
+├── floor_0/
+│   └── room_*/
+│       ├── results/
+│       │   ├── filtered_clusters/    # Segmented objects
+│       │   ├── recon/                # Reconstructed meshes
+│       │   └── shell/                # Room shells
+│       └── *.csv                     # Object manifests
+└── _PCG_DONE                         # Completion marker
+```
+
+## 🐛 Troubleshooting
+
+### CGAL Version Issues
+If CGAL < 5.3, mesh processing tools will be skipped. See [LM2PCG/docs/CGAL_VERSION_TROUBLESHOOTING.md](./LM2PCG/docs/CGAL_VERSION_TROUBLESHOOTING.md)
+
+### Windows Issues
+- Use Git Bash or WSL (PowerShell/CMD not supported)
+- Ensure bash is available in PATH
 
 ### SAM2 Model Not Found
-```
-FileNotFoundError: SAM2 checkpoint not found
-```
-**Solution**: Download sam2.1_hiera_large.pt to `SAM2/checkpoints/`
+Download `sam2.1_hiera_large.pt` to `SAM23D/SAM2/checkpoints/`
 
-### Point Cloud Projection Misalignment
-```
-Warning: No points selected. Check alignment or mask.
-```
-**Solution**: Verify camera pose JSON matches the panoramic image
+## 📖 Documentation
 
-### Import Errors
-```
-ModuleNotFoundError: No module named 'sam2'
-```
-**Solution**: Ensure SAM2 directory is in Python path (handled automatically by predictor)
+- [LM2PCG Documentation](./LM2PCG/README.md) - Point cloud processing
+- [SAM23D Documentation](./SAM23D/README.md) - 2D-3D segmentation
+- [GUI Documentation](./GUI_SpatialLLM/README.md) - Interactive interface
+- [AI API Guide](./LM2PCG/docs/AI_API.md) - API reference
+- [Web Viewer Guide](./LM2PCG/docs/POINTCLOUD_VIEWER.md) - 3D visualization
 
-## Citation
+## 🤝 Contributing
 
-If you use SAM2 in your research, please cite:
-```bibtex
-@article{ravi2024sam2,
-  title={SAM 2: Segment Anything in Images and Videos},
-  author={Ravi, Nikhila and others},
-  journal={arXiv preprint arXiv:2408.00714},
-  year={2024}
-}
-```
+Each submodule has its own repository:
+- [LM2PCG](https://github.com/Jackson513ye/LM2PCG)
+- [SAM23D](https://github.com/Jackson513ye/SAM23D)
+- [GUI_SpatialLLM](https://github.com/Jackson513ye/GUI_SpatialLLM)
 
-## License
+Please submit issues and pull requests to the respective repositories.
 
-This module is part of the Spatial Understanding GUI project.
-SAM2 is licensed by Meta under Apache 2.0.
+## 📄 License
 
-## Related Projects
+See individual submodule repositories for license information.
 
-- **GUI**: Front-end and back-end for user interaction
-- **LM2PCG**: Multi-room spatial AI agent with database
-- **SAM2**: Meta's Segment Anything Model 2 (external dependency)
+## ✅ Quick Checklist
+
+- [ ] Python 3.12 venv active
+- [ ] System dependencies installed (PCL, CGAL, Boost, Eigen)
+- [ ] PolyFit + Easy3D wheels installed
+- [ ] SAM2 model checkpoint downloaded
+- [ ] Input `.e57` and `.las` files in `data/input/`
+- [ ] Submodules initialized: `git submodule update --init --recursive`
+- [ ] LM2PCG C++ components built
+- [ ] Run: `snakemake --cores all --configfile config.yaml`
+
+---
+
+**Version:** 1.3.0  
+**Last Updated:** 2025-11-03

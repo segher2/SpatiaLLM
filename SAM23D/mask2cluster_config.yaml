@@ -1,0 +1,56 @@
+# Mask2Cluster Configuration
+# Parameters for FEC-based clustering refinement
+
+# Clustering parameters
+clustering:
+  # Enable clustering refinement (default: false)
+  enabled: false
+  
+  # FEC clustering radius in meters (default: 0.05)
+  # Smaller values = finer clustering, larger = more permissive
+  eps: 0.05
+  
+  # Size filter factor: keep clusters >= floor(n * mean_size) (default: 0.3)
+  # Range: 0.1-0.5. Lower = keep more clusters, higher = stricter filtering
+  n: 0.3
+  
+  # Number of nearest points to camera for voting (default: 50)
+  # Higher values = more stable selection but slower
+  m: 50
+  
+  # Minimum neighbors for core points (default: 8)
+  min_pts_core: 8
+  
+  # Minimum total points for validation (default: 100)
+  # Clusters smaller than this will be rejected
+  min_pts_total: 100
+  
+  # Maximum cluster diameter in meters (default: 0.0 = no limit)
+  # Set to reject overly large clusters
+  max_diameter: 0.0
+
+# Scene-specific presets
+presets:
+  small_objects:  # For cups, books, small furniture
+    eps: 0.02
+    n: 0.2
+    m: 30
+    min_pts_total: 50
+  
+  furniture:  # For tables, chairs, cabinets
+    eps: 0.05
+    n: 0.3
+    m: 50
+    min_pts_total: 100
+  
+  large_objects:  # For walls, large structures
+    eps: 0.1
+    n: 0.4
+    m: 100
+    min_pts_total: 200
+  
+  high_noise:  # For noisy scans
+    eps: 0.03
+    n: 0.5
+    m: 100
+    min_pts_total: 150

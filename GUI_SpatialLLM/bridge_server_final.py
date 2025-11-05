@@ -37,6 +37,12 @@ latest_overlay = {
     "base64": None
 }
 
+# Store processing completion status
+processing_status = {
+    "completed": False,
+    "las_path": None
+}
+
 print("Bridge server started - using NumPy arrays")
 print(f"Base directory: {BASE_DIR}")
 
@@ -51,44 +57,57 @@ def pitch_yaw_to_pixel(pitch: float, yaw: float, width: int, height: int):
 
 
 def get_image_path(filename: str):
-    """Recursively search in data/lm2pcg_data/floor_*/room_* for a panorama image
-    that matches the given filename. Returns (image_path, room_dir) or (None, None) if not found."""
+    """Search for a panorama image that matches the given filename. 
+    First checks ../data/input/panoramas/images, then falls back to data/lm2pcg_data/floor_*/room_*.
+    Returns (image_path, room_dir) or (None, None) if not found."""
     if not filename:
         return None, None
 
     stem = Path(filename).stem
-    # Try LM2PCG data directory first
+    
+    # First try the new panoramas location (where GUI loads images from)
+    pano_images_dir = BASE_DIR.parent / "data" / "input" / "panoramas" / "images"
+    if pano_images_dir.exists():
+        for ext in ['.jpg', '.jpeg', '.png', '.tif', '.tiff']:
+            potential_path = pano_images_dir / f"{stem}{ext}"
+            if potential_path.exists():
+                print(f"Found panorama in: {pano_images_dir}")
+                return potential_path, pano_images_dir
+                
+        # Try case-insensitive match
+        for file in pano_images_dir.glob("*"):
+            if file.stem.lower() == stem.lower() and file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.tif', '.tiff']:
+                print(f"Found panorama (case-insensitive) in: {pano_images_dir}")
+                return file, pano_images_dir
+    
+    # Fallback: Try LM2PCG data directory (for room-based PLY files)
     base_dir = BASE_DIR / "data" / "lm2pcg_data"
     
     if not base_dir.exists():
         # Fallback to old path
         base_dir = BASE_DIR / "data" / "output"
     
-    if not base_dir.exists():
-        print(f"Base directory not found: {base_dir}")
-        return None, None
-
-    for floor_dir in base_dir.glob("floor_*"):
-        if not floor_dir.is_dir():
-            continue
-
-        for room_dir in floor_dir.glob("room_*"):
-            if not room_dir.is_dir():
+    if base_dir.exists():
+        for floor_dir in base_dir.glob("floor_*"):
+            if not floor_dir.is_dir():
                 continue
 
-            # Try exact match
-            for ext in ['.jpg', '.jpeg', '.png', '.tif', '.tiff']:
-                potential_path = room_dir / f"{stem}{ext}"
-                if potential_path.exists():
-                    print(f"Found panorama in: {room_dir}")
-                    return potential_path, room_dir
+            for room_dir in floor_dir.glob("room_*"):
+                if not room_dir.is_dir():
+                    continue
 
-            # Try case-insensitive match
-            for file in room_dir.glob("*"):
-                if file.stem.lower() == stem.lower() and file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.tif',
-                                                                                 '.tiff']:
-                    print(f"Found panorama (case-insensitive) in: {room_dir}")
-                    return file, room_dir
+                # Try exact match
+                for ext in ['.jpg', '.jpeg', '.png', '.tif', '.tiff']:
+                    potential_path = room_dir / f"{stem}{ext}"
+                    if potential_path.exists():
+                        print(f"Found panorama in: {room_dir}")
+                        return potential_path, room_dir
+
+                # Try case-insensitive match
+                for file in room_dir.glob("*"):
+                    if file.stem.lower() == stem.lower() and file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.tif', '.tiff']:
+                        print(f"Found panorama (case-insensitive) in: {room_dir}")
+                        return file, room_dir
 
     print(f"Panorama not found for: {filename}")
     return None, None
@@ -152,8 +171,8 @@ def handle_click():
         print("Five points reached - running SAM2 predictor...")
         try:
             from sam2_predictor import run_sam2_prediction
-            # Pass the full image path from GUI's extracted_data
-            full_image_path = BASE_DIR / "extracted_data" / "images" / click_data["image_title"]
+            # Pass the full image path from ../data/input/panoramas/images
+            full_image_path = BASE_DIR.parent / "data" / "input" / "panoramas" / "images" / click_data["image_title"]
             result = run_sam2_prediction(click_data["points"], str(full_image_path))
             print("SAM2 run complete.")
 
@@ -174,10 +193,23 @@ def handle_click():
             print("Starting point cloud filtering...")
             from select_points_in_mask import filter_point_cloud_with_mask
             image_stem = Path(click_data["image_title"]).stem
+            
+            # Enable clustering refinement
+            use_clustering = True  # Set to True to enable FEC-based cluster selection
+            cluster_params = {
+                'eps': 0.05,       # Clustering radius
+                'n': 0.3,          # Size filter factor
+                'm': 50,           # Top-M nearest points for voting
+                'min_pts_core': 8,
+                'min_pts_total': 100
+            }
+            
             las_path = filter_point_cloud_with_mask(
                 result["mask_path"],
                 image_stem,
-                BASE_DIR
+                BASE_DIR,
+                use_clustering=use_clustering,
+                cluster_params=cluster_params
             )
 
             result["las_path"] = las_path
@@ -213,7 +245,7 @@ def handle_click():
 
 @app.route('/click/reset', methods=['POST'])
 def reset_clicks():
-    global click_data, latest_overlay
+    global click_data, latest_overlay, processing_status
     click_data = {
         "image_title": None,
         "points": np.array([], dtype=np.int32).reshape(0, 2)
@@ -222,8 +254,27 @@ def reset_clicks():
         "path": None,
         "base64": None
     }
+    processing_status = {
+        "completed": False,
+        "las_path": None
+    }
     print("All clicks reset")
     return jsonify({"ok": True})
+
+@app.route('/set_completion', methods=['POST'])
+def set_completion():
+    """Mark processing as complete"""
+    global processing_status
+    data = request.get_json()
+    processing_status["completed"] = data.get("completed", False)
+    processing_status["las_path"] = data.get("las_path")
+    print(f"Processing marked as complete: {processing_status['las_path']}")
+    return jsonify({"ok": True})
+
+@app.route('/get_completion', methods=['GET'])
+def get_completion():
+    """Check if processing is complete"""
+    return jsonify(processing_status)
 
 @app.route('/clicks', methods=['GET'])
 def get_clicks():
@@ -301,10 +352,23 @@ def run_sam2():
             print("Starting point cloud filtering...")
             from select_points_in_mask import filter_point_cloud_with_mask
             image_stem = Path(click_data["image_title"]).stem
+            
+            # Enable clustering refinement
+            use_clustering = True  # Set to True to enable FEC-based cluster selection
+            cluster_params = {
+                'eps': 0.05,       # Clustering radius
+                'n': 0.3,          # Size filter factor
+                'm': 50,           # Top-M nearest points for voting
+                'min_pts_core': 8,
+                'min_pts_total': 100
+            }
+            
             las_path = filter_point_cloud_with_mask(
                 result["mask_path"],
                 image_stem,
-                BASE_DIR
+                BASE_DIR,
+                use_clustering=use_clustering,
+                cluster_params=cluster_params
             )
             result["las_path"] = las_path
             print(f"LAS file saved at: {las_path}")

@@ -11,57 +11,73 @@ import streamlit.components.v1 as components
 import requests
 import time
 from streamlit_js_eval import streamlit_js_eval
-from dotenv import load_dotenv
 import mutli_room_agent2 as room_agent
 import ai_api_wrapper as ai_wrapper
 import enrich_room_types as enrich_rooms
 import room_database
 
-# Load environment variables from .env file
-load_dotenv()
 
 # Page config
 st.set_page_config(page_title="Spatial Understanding via Multi-Modal LLM", layout="wide")
 
-# Styling - Black background like sidebar
+# Clean SAM23D/outputs directory on startup
+if 'outputs_cleaned' not in st.session_state:
+    import shutil
+    from pathlib import Path
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.dirname(current_dir)
+    outputs_dir = Path(root_dir) / "SAM23D" / "outputs"
+    
+    if outputs_dir.exists():
+        shutil.rmtree(outputs_dir)
+        outputs_dir.mkdir(parents=True, exist_ok=True)
+    
+    st.session_state.outputs_cleaned = True
+
+# Styling
 st.markdown(
     """
     <style>
-    /* Main app background - black like sidebar */
-    .stApp {
-        background-color: #0e1117 !important;
-    }
-    section[data-testid="stAppViewContainer"] { 
-        background-color: #0e1117 !important;
-        color: white !important; 
-    }
+    section[data-testid="stAppViewContainer"] { color: white !important; }
     section[data-testid="stAppViewContainer"] * { color: white !important; }
     section[data-testid="stAppViewContainer"] div[data-testid="stNotification"] {
-        background: rgba(0,0,0,0.5) !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
+        background: var(--background-color, rgba(0,0,0,0.25)) !important;
+        border: 1px solid var(--secondary-background-color, rgba(255,255,255,0.2)) !important;
         color: white !important;
     }
     .st-emotion-cache-1an99fx, .st-emotion-cache-3uj0rx { color: #fff !important; }
-    .st-emotion-cache-1iitq1e, .st-emotion-cache-1fee4w7, .st-dy { 
-        background: rgba(40,40,40,0.5) !important; 
-        color: #fff !important; 
-    }
-    /* Chat messages styling */
-    div[data-testid="stChatMessage"] {
-        background-color: rgba(40, 40, 40, 0.3) !important;
-    }
-    /* Dataframe styling */
-    div[data-testid="stDataFrame"] {
-        background-color: rgba(30, 30, 30, 0.8) !important;
-    }
+    .st-emotion-cache-1iitq1e, .st-emotion-cache-1fee4w7, .st-dy { background: rgba(240,242,246,0.1) !important; color: #fff !important; }
     </style>
     """,
     unsafe_allow_html=True
 )
 
 
-# Script directory for paths
+# Background image
+def add_bg_from_local(image_file):
+    try:
+        with open(image_file, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode()
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-image: url("data:image/png;base64,{encoded}");
+                background-attachment: fixed;
+                background-size: cover;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+    except FileNotFoundError:
+        st.markdown("<style>.stApp { background: #0e1117; }</style>", unsafe_allow_html=True)
+
+
+# Use absolute path for background image
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+add_bg_from_local(os.path.join(SCRIPT_DIR, "bg_streamlit.png"))
 
 # Initialize states
 for key, val in {
@@ -93,74 +109,11 @@ if start_btn:
     else:
         with st.spinner("Initializing Spatial AI Agent..."):
             try:
-                # Use absolute path to database in LM2PCG
-                db_path = os.path.join(SCRIPT_DIR, "..", "LM2PCG", "spatial_rooms.db")
-                
-                # Initialize agent with thread-safe check_same_thread=False
-                import sqlite3
-                original_connect = sqlite3.connect
-                
-                def thread_safe_connect(*args, **kwargs):
-                    kwargs['check_same_thread'] = False
-                    return original_connect(*args, **kwargs)
-                
-                sqlite3.connect = thread_safe_connect
-                
-                st.session_state.agent = room_agent.FinalSpatialAIAgent(
-                    database_path=db_path,
-                    use_images=True  # Enable image analysis
-                )
-                
-                # Restore original connect
-                sqlite3.connect = original_connect
-                
-                # Generate database summary table
-                agent_instance = st.session_state.agent
-                rooms = agent_instance.rooms_df
-                floors = agent_instance.floors_df
-                
-                # Build summary table
-                import pandas as pd
-                summary_data = []
-                for _, room in rooms.iterrows():
-                    room_id = room['room_id']
-                    floor_num = room['floor_number']
-                    room_num = room.get('room_number', '???')
-                    room_type = room.get('room_type', 'unknown')
-                    
-                    # Get images count (panoramas)
-                    cursor = agent_instance.conn.cursor()
-                    cursor.execute("SELECT COUNT(*) FROM images WHERE room_id = ?", (room_id,))
-                    image_count = cursor.fetchone()[0]
-                    
-                    # Get planes count
-                    cursor.execute("SELECT COUNT(*) FROM planes WHERE room_id = ?", (room_id,))
-                    plane_count = cursor.fetchone()[0]
-                    planes_status = "✓" if plane_count > 0 else "✗"
-                    
-                    # Get objects count
-                    cursor.execute("SELECT COUNT(*) FROM objects WHERE room_id = ?", (room_id,))
-                    obj_count = cursor.fetchone()[0]
-                    
-                    summary_data.append({
-                        "Room ID": room_id,
-                        "Floor": floor_num,
-                        "Room #": room_num,
-                        "Type": room_type.title(),
-                        "Objects": obj_count,
-                        "Images": image_count,
-                        "Planes": planes_status
-                    })
-                
-                summary_df = pd.DataFrame(summary_data)
-                
-                welcome_msg = "🏠 **Spatial AI Agent Initialized Successfully!**\n\n"
-                welcome_msg += f"**Database:** {len(floors)} floors, {len(rooms)} rooms\n\n"
-                welcome_msg += "**Room Summary Table:**"
-                
-                # Store the summary dataframe in session state
-                st.session_state.summary_df = summary_df
-                st.session_state.chat_ui = [("assistant", welcome_msg)]
+                exec("room_database")
+                exec("enrich_rooms")
+                exec("ai_wrapper")
+                st.session_state.agent = room_agent
+                st.session_state.chat_ui = []
                 st.success("Spatial AI Agent initialized.")
             except Exception as e:
                 st.error(f"Failed to start AI Agent: {e}")
@@ -168,74 +121,11 @@ if start_btn:
 elif restart_btn:
     with st.spinner("Restarting AI Agent..."):
         try:
-            # Use absolute path to database in LM2PCG
-            db_path = os.path.join(SCRIPT_DIR, "..", "LM2PCG", "spatial_rooms.db")
-            
-            # Initialize agent with thread-safe check_same_thread=False
-            import sqlite3
-            original_connect = sqlite3.connect
-            
-            def thread_safe_connect(*args, **kwargs):
-                kwargs['check_same_thread'] = False
-                return original_connect(*args, **kwargs)
-            
-            sqlite3.connect = thread_safe_connect
-            
-            st.session_state.agent = room_agent.FinalSpatialAIAgent(
-                database_path=db_path,
-                use_images=True  # Enable image analysis
-            )
-            
-            # Restore original connect
-            sqlite3.connect = original_connect
-            
-            # Generate database summary table
-            agent_instance = st.session_state.agent
-            rooms = agent_instance.rooms_df
-            floors = agent_instance.floors_df
-            
-            # Build summary table
-            import pandas as pd
-            summary_data = []
-            for _, room in rooms.iterrows():
-                room_id = room['room_id']
-                floor_num = room['floor_number']
-                room_num = room.get('room_number', '???')
-                room_type = room.get('room_type', 'unknown')
-                
-                # Get images count (panoramas)
-                cursor = agent_instance.conn.cursor()
-                cursor.execute("SELECT COUNT(*) FROM images WHERE room_id = ?", (room_id,))
-                image_count = cursor.fetchone()[0]
-                
-                # Get planes count
-                cursor.execute("SELECT COUNT(*) FROM planes WHERE room_id = ?", (room_id,))
-                plane_count = cursor.fetchone()[0]
-                planes_status = "✓" if plane_count > 0 else "✗"
-                
-                # Get objects count
-                cursor.execute("SELECT COUNT(*) FROM objects WHERE room_id = ?", (room_id,))
-                obj_count = cursor.fetchone()[0]
-                
-                summary_data.append({
-                    "Room ID": room_id,
-                    "Floor": floor_num,
-                    "Room #": room_num,
-                    "Type": room_type.title(),
-                    "Objects": obj_count,
-                    "Images": image_count,
-                    "Planes": planes_status
-                })
-            
-            summary_df = pd.DataFrame(summary_data)
-            
-            welcome_msg = "🔄 **Spatial AI Agent Restarted Successfully!**\n\n"
-            welcome_msg += f"**Database:** {len(floors)} floors, {len(rooms)} rooms\n\n"
-            welcome_msg += "**Room Summary Table:**"
-            
-            # Store the summary dataframe in session state
-            st.session_state.summary_df = summary_df
-            st.session_state.chat_ui = [("assistant", welcome_msg)]
+            exec("room_database")
+            exec("enrich_rooms")
+            exec("ai_wrapper")
+            st.session_state.agent = room_agent
+            st.session_state.chat_ui = []
             st.success("Agent restarted successfully!")
         except Exception as e:
             st.error(f"Restart failed: {e}")
@@ -291,18 +181,19 @@ st.markdown('<p style="color:white;">Bridging The Gap Between Natural Language a
             unsafe_allow_html=True)
 
 if not check_bridge_server():
-    st.info("""
+    st.error("""
     **Bridge Server Not Found**
-    The bridge server is optional. If you need it, run:
+    Run it first:
     ```bash
     python bridge_server_final.py
     ```
     """)
+    st.stop()
 
 # Panorama setup + virtual mode page
 if st.session_state.page == "virtual":
     # Use absolute path based on script location (SCRIPT_DIR already defined above)
-    PANOS_DIR = os.path.join(SCRIPT_DIR, "extracted_data", "images")
+    PANOS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "data", "input", "panoramas", "images")
     pano_files = sorted(
         glob.glob(os.path.join(PANOS_DIR, "*.jpg"))
         + glob.glob(os.path.join(PANOS_DIR, "*.jpeg"))
@@ -317,7 +208,7 @@ if st.session_state.page == "virtual":
     pano_files.sort(key=_natural_key)
 
     if not pano_files:
-        st.warning("No panoramas found in extracted_data/images.")
+        st.warning(f"No panoramas found in {PANOS_DIR}")
         st.stop()
 
     # Session state
@@ -339,6 +230,10 @@ if st.session_state.page == "virtual":
         st.session_state.pitch = 0
     if "hfov" not in st.session_state:
         st.session_state.hfov = 90
+    if "processing_complete" not in st.session_state:
+        st.session_state.processing_complete = False
+    if "las_path" not in st.session_state:
+        st.session_state.las_path = None
 
 
     def wrap_idx(i: int, n: int) -> int:
@@ -481,7 +376,13 @@ if st.session_state.page == "virtual":
                     headers: {{ "Content-Type": "application/json" }},
                     body: JSON.stringify({{ pitch, yaw, point_number: numPoints, image_filename: {filename_json} }})
                   }})
-                    .then(r => r.json())
+                    .then(r => {{
+                      console.log("Response status:", r.status);
+                      if (!r.ok) {{
+                        throw new Error(`HTTP error! status: ${{r.status}}`);
+                      }}
+                      return r.json();
+                    }})
                     .then(data => {{
                       console.log("Server response:", data);
                       console.log("sam2_auto_run:", data.sam2_auto_run);
@@ -489,6 +390,7 @@ if st.session_state.page == "virtual":
                       if (data.sam2_result) {{
                         console.log("overlay_base64 exists:", !!data.sam2_result.overlay_base64);
                         console.log("overlay_base64 length:", data.sam2_result.overlay_base64 ? data.sam2_result.overlay_base64.length : 0);
+                        console.log("las_path exists:", !!data.sam2_result.las_path);
                       }}
                       
                       // Hide loading overlay
@@ -508,15 +410,37 @@ if st.session_state.page == "virtual":
                           showZoomCtrl: true,
                           compass: false
                         }});
-                        window.parent.postMessage({{
-                          type: 'OVERLAY_READY',
-                          overlay_base64: data.sam2_result.overlay_base64
-                        }}, '*');
+                        
+                        // Check if processing is complete (SAM2 + mask2cluster)
+                        if (data.sam2_result.success && data.sam2_result.las_path) {{
+                          console.log("✅✅ SAM2 + mask2cluster processing complete!");
+                          console.log("LAS file:", data.sam2_result.las_path);
+                          
+                          // Notify the parent window (Streamlit) via a simple backend endpoint
+                          // Store the completion status on the server side
+                          fetch("{BRIDGE_SERVER_URL}/set_completion", {{
+                            method: "POST",
+                            headers: {{ "Content-Type": "application/json" }},
+                            body: JSON.stringify({{
+                              las_path: data.sam2_result.las_path,
+                              completed: true
+                            }})
+                          }})
+                          .then(() => {{
+                            console.log("✅ Notified backend of completion");
+                          }})
+                          .catch(err => console.error("Error notifying completion:", err));
+                        }}
                       }} else {{
                         console.warn("❌ Not updating viewer - conditions not met");
                       }}
                     }})
-                    .catch(err => console.error("Error sending click:", err));
+                    .catch(err => {{
+                      console.error("❌ Error sending click:", err);
+                      // Always hide loading overlay on error
+                      document.getElementById('loadingOverlay').style.display = 'none';
+                      alert("Error processing click: " + err.message);
+                    }});
                 }}
               }}
             }});
@@ -633,31 +557,23 @@ if st.session_state.page == "virtual":
         image_filename=os.path.basename(current_path)
     )
 
-    view_data = streamlit_js_eval(
-        js_expressions=[
-            """
-            (() => {
-              return new Promise(resolve => {
-                window.addEventListener('message', (event) => {
-                  if (event.data && event.data.type === 'VIEW_UPDATE') {
-                    resolve(event.data);
-                  }
-                });
-              });
-            })()
-            """
-        ],
-        key="view_listener"
-    )
-
-    if view_data:
-        # handle both dict and list return types
-        view_event = view_data[0] if isinstance(view_data, list) and len(view_data) > 0 else view_data
-
-        if isinstance(view_event, dict):
-            st.session_state.yaw = view_event.get("yaw", 0)
-            st.session_state.pitch = view_event.get("pitch", 0)
-            st.session_state.hfov = view_event.get("hfov", 90)
+    # Check if processing is complete by polling the backend
+    if not st.session_state.processing_complete:
+        try:
+            response = requests.get(f"{BRIDGE_SERVER_URL}/get_completion", timeout=1)
+            if response.status_code == 200:
+                completion_data = response.json()
+                if completion_data.get("completed"):
+                    st.session_state.processing_complete = True
+                    st.session_state.las_path = completion_data.get("las_path")
+                    st.rerun()
+        except:
+            pass  # Ignore errors during polling
+    
+    # Add a button to manually check completion status
+    if not st.session_state.processing_complete:
+        if st.button("🔄 Check if Processing Complete", key="check_completion"):
+            st.rerun()
 
     # Display selected points
     if st.session_state.clicked_points:
@@ -669,9 +585,47 @@ if st.session_state.page == "virtual":
     else:
         st.caption("Click inside the panorama (max 5 points).")
 
-    # Display overlay status
-    if st.session_state.overlay_url:
-        st.success("SAM2 overlay is currently displayed")
+    # Show "Show Results" button when processing is complete
+    if st.session_state.processing_complete:
+        st.success("✅ SAM2 and Mask2Cluster processing complete!")
+        st.divider()
+        
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            if st.button("🔍 Show Results", use_container_width=True, type="primary"):
+                # Execute visualize_latest.py and get the URL
+                try:
+                    # Find script path: go up one level from GUI_SpatialLLM to SpatialLLM root
+                    current_dir = os.path.dirname(os.path.abspath(__file__))
+                    root_dir = os.path.dirname(current_dir)
+                    script_path = os.path.join(root_dir, "SAM23D", "visualize_latest.py")
+                    
+                    if not os.path.exists(script_path):
+                        st.error(f"Script not found: {script_path}")
+                    else:
+                        result = subprocess.run(
+                            ["python3", script_path],
+                            capture_output=True,
+                            text=True,
+                            timeout=30
+                        )
+                        
+                        if result.returncode == 0:
+                            # Extract URL from last line
+                            url = result.stdout.strip().split('\n')[-1]
+                            if url.startswith('http'):
+                                # Open URL in new tab using streamlit_js_eval
+                                streamlit_js_eval(js_expressions=f"window.open('{url}', '_blank')")
+                            else:
+                                st.error("Failed to get viewer URL")
+                                st.code(result.stdout)
+                        else:
+                            st.error(f"Error running visualize_latest.py: {result.stderr}")
+                except Exception as e:
+                    st.error(f"Failed to launch viewer: {str(e)}")
+        with col2:
+            if st.session_state.las_path:
+                st.caption(f"📁 Point cloud saved: `{os.path.basename(st.session_state.las_path)}`")
 
 #  Chat UI
 agent = st.session_state.get("agent")
@@ -685,12 +639,9 @@ if agent:
         st.session_state["chat_ui"] = []
 
     # Display existing chat
-    for idx, (role, content) in enumerate(st.session_state["chat_ui"]):
+    for role, content in st.session_state["chat_ui"]:
         with st.chat_message(role):
             st.write(content)
-            # Show summary table after first assistant message (welcome message)
-            if role == "assistant" and idx == 0 and "summary_df" in st.session_state:
-                st.dataframe(st.session_state.summary_df, use_container_width=True, hide_index=True)
 
     # Input box
     user_q = st.chat_input("Ask about the room… (type 'overview' or 'quit' for commands)")
@@ -708,6 +659,16 @@ if agent:
             st.session_state["chat_ui"].append(
                 ("assistant", "Goodbye! (You can reset the session or exit virtual mode.)")
             )
+
+        elif cleaned == "overview":
+            try:
+                overview = agent.get_room_summary(agent.current_room_id)
+            except Exception:
+                # fallback if attribute not available
+                overview = "Overview not available for this dataset."
+            with st.chat_message("assistant"):
+                st.markdown(f"<pre style='color:white;'>{overview}</pre>", unsafe_allow_html=True)
+            st.session_state["chat_ui"].append(("assistant", overview))
 
         else:
             with st.spinner("Analyzing spatial data…"):
