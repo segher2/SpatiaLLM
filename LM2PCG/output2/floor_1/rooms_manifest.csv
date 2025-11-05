@@ -1,0 +1,6 @@
+room_id, floor_id, room_type, total_area, total_volume, length, width, height,ply_path,n_points
+1,1,some room,0,0,0,0,0,output_house\floor_1\room_001\shell_001.ply,4659622
+2,1,some room,0,0,0,0,0,output_house\floor_1\room_002\shell_002.ply,2424972
+3,1,some room,0,0,0,0,0,output_house\floor_1\room_003\shell_003.ply,1906758
+4,1,some room,0,0,0,0,0,output_house\floor_1\room_004\shell_004.ply,1834973
+5,1,some room,0,0,0,0,0,output_house\floor_1\room_005\shell_005.ply,1343039

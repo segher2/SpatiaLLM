@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "title": "UOBB only (room_007)",
+  "defaults": { "pointSize": 3 },
+  "items": [
+    {
+      "id": "uobb-room_007-only",
+      "name": "room_007 uobb",
+      "kind": "mesh",
+      "role": "uobb",
+      "source": { "url": "/data/room_007/shell_uobb.ply" },
+      "group": "debug",
+      "visible": true,
+      "style": { "color": [30,144,255], "opacity": 0.5 }
+    }
+  ]
+}

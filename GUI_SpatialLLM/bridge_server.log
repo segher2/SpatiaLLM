@@ -1,0 +1,238 @@
+Added SAM2 to Python path: /Users/jacksonye/Documents/GitHub/GUI/SAM2
+Bridge server started - using NumPy arrays
+Base directory: /Users/jacksonye/Documents/GitHub/GUI
+Bridge server running on http://localhost:5056
+Endpoints:
+  POST /click              - Save click coordinates
+  POST /click/reset        - Clear all clicks
+  GET  /clicks             - List saved clicks
+  GET  /get_latest_overlay - Get most recent SAM2 overlay
+  POST /run_sam2           - Manually trigger SAM2
+  GET  /health             - Health check
+ * Serving Flask app 'bridge_server_final'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5056
+ * Running on http://192.168.0.102:5056
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [02/Nov/2025 04:25:59] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:26:15] "POST /click/reset HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:13] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:14] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:14] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:21] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:21] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:25] "POST /click/reset HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:27] "OPTIONS /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:28] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:29] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:30] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:32] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:27:33] "OPTIONS /click HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "/Users/jacksonye/Documents/GitHub/GUI/bridge_server_final.py", line 149, in handle_click
+    result = run_sam2_prediction(click_data["points"], click_data["image_title"])
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 120, in run_sam2_prediction
+    raise e
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 37, in run_sam2_prediction
+    raise FileNotFoundError(f"Image not found: {image_filename}")
+FileNotFoundError: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+127.0.0.1 - - [02/Nov/2025 04:27:34] "[35m[1mPOST /click HTTP/1.1[0m" 500 -
+127.0.0.1 - - [02/Nov/2025 04:34:07] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:10] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:10] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:12] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:12] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:14] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:14] "POST /click/reset HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:16] "OPTIONS /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:16] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:18] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:19] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:20] "POST /click HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "/Users/jacksonye/Documents/GitHub/GUI/bridge_server_final.py", line 149, in handle_click
+    # Pass the full image path from GUI's extracted_data
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 120, in run_sam2_prediction
+    "image_size": original_image.shape
+    ^^^
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 37, in run_sam2_prediction
+    if potential_path.exists():
+FileNotFoundError: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+127.0.0.1 - - [02/Nov/2025 04:34:21] "[35m[1mPOST /click HTTP/1.1[0m" 500 -
+127.0.0.1 - - [02/Nov/2025 04:34:33] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:34] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:34] "POST /click/reset HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:34] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:36] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:36] "POST /click/reset HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:39] "OPTIONS /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:39] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:40] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:40] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:42] "POST /click HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "/Users/jacksonye/Documents/GitHub/GUI/bridge_server_final.py", line 149, in handle_click
+    # Pass the full image path from GUI's extracted_data
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 120, in run_sam2_prediction
+    "image_size": original_image.shape
+    ^^^
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 37, in run_sam2_prediction
+    if potential_path.exists():
+FileNotFoundError: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+127.0.0.1 - - [02/Nov/2025 04:34:43] "[35m[1mPOST /click HTTP/1.1[0m" 500 -
+127.0.0.1 - - [02/Nov/2025 04:34:44] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:46] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:47] "POST /click/reset HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:47] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:56] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:56] "POST /click/reset HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:59] "OPTIONS /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:34:59] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:00] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:01] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:03] "POST /click HTTP/1.1" 200 -
+All clicks reset
+All clicks reset
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 1/5 - pixel=(4130, 2254)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 2/5 - pixel=(4373, 2370)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 3/5 - pixel=(4059, 2562)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 4/5 - pixel=(4370, 2698)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 5/5 - pixel=(4042, 2924)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Five points reached - running SAM2 predictor...
+ Checkpoint path: /Users/jacksonye/Documents/GitHub/SAM23D/SAM2/checkpoints/sam2.1_hiera_large.pt
+ Config path: /Users/jacksonye/Documents/GitHub/SAM23D/SAM2/configs/sam2.1/sam2.1_hiera_l.yaml
+ SAM2 prediction failed: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+SAM2 failed: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+All clicks reset
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 1/5 - pixel=(4094, 2414)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 2/5 - pixel=(4357, 2288)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 3/5 - pixel=(4349, 2570)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 4/5 - pixel=(4070, 2751)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 5/5 - pixel=(4324, 2923)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Five points reached - running SAM2 predictor...
+ Checkpoint path: /Users/jacksonye/Documents/GitHub/SAM23D/SAM2/checkpoints/sam2.1_hiera_large.pt
+ Config path: /Users/jacksonye/Documents/GitHub/SAM23D/SAM2/configs/sam2.1/sam2.1_hiera_l.yaml
+ SAM2 prediction failed: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+SAM2 failed: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+All clicks reset
+All clicks reset
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 1/5 - pixel=(4087, 2431)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 2/5 - pixel=(4367, 2547)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 3/5 - pixel=(4065, 2701)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 4/5 - pixel=(4322, 2370)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 5/5 - pixel=(4324, 2919)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Five points reached - running SAM2 predictor...
+ Checkpoint path: /Users/jacksonye/Documents/GitHub/SAM23D/SAM2/checkpoints/sam2.1_hiera_large.pt
+ Config path: /Users/jacksonye/Documents/GitHub/SAM23D/SAM2/configs/sam2.1/sam2.1_hiera_l.yaml
+ SAM2 prediction failed: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+SAM2 failed: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+All clicks reset
+All clicks reset
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 1/5 - pixel=(4304, 2355)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 2/5 - pixel=(4027, 2522)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 3/5 - pixel=(4364, 2587)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 4/5 - pixel=(4084, 2731)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Received click for image: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+Found panorama in: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003
+Stored point 5/5 - pixel=(4378, 2867)
+Associated PLY file found: /Users/jacksonye/Documents/GitHub/GUI/data/lm2pcg_data/floor_0/room_003/shell_003.ply
+Five points reached - running SAM2 predictor...
+ Checkpoint path: /Users/jacksonye/Documents/GitHub/SAM23D/SAM2/checkpoints/sam2.1_hiera_large.pt
+ Config path: /Users/jacksonye/Documents/GitHub/SAM23D/SAM2/configs/sam2.1/sam2.1_hiera_l.yaml
+ SAM2 prediction failed: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+SAM2 failed: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpgTraceback (most recent call last):
+  File "/Users/jacksonye/Documents/GitHub/GUI/bridge_server_final.py", line 149, in handle_click
+    # Pass the full image path from GUI's extracted_data
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 120, in run_sam2_prediction
+    "image_size": original_image.shape
+    ^^^
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 37, in run_sam2_prediction
+    if potential_path.exists():
+FileNotFoundError: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+127.0.0.1 - - [02/Nov/2025 04:35:04] "[35m[1mPOST /click HTTP/1.1[0m" 500 -
+127.0.0.1 - - [02/Nov/2025 04:35:09] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:17] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:18] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:19] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:19] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:23] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:23] "POST /click/reset HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:28] "OPTIONS /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:28] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:29] "OPTIONS /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:29] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:30] "OPTIONS /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:30] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:31] "OPTIONS /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:31] "POST /click HTTP/1.1" 200 -
+127.0.0.1 - - [02/Nov/2025 04:35:32] "OPTIONS /click HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "/Users/jacksonye/Documents/GitHub/GUI/bridge_server_final.py", line 149, in handle_click
+    # Pass the full image path from GUI's extracted_data
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 120, in run_sam2_prediction
+    "image_size": original_image.shape
+    ^^^
+  File "/Users/jacksonye/Documents/GitHub/GUI/sam2_predictor.py", line 37, in run_sam2_prediction
+    if potential_path.exists():
+FileNotFoundError: Image not found: 00028_de skatting 81_2025-06-20_15.08.22_G11-0265.jpg
+127.0.0.1 - - [02/Nov/2025 04:35:32] "[35m[1mPOST /click HTTP/1.1[0m" 500 -

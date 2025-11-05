@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "title": "Selected objects across rooms",
+  "defaults": { "pointSize": 3 },
+  "items": [
+    {
+      "id": "obj-0-7-12",
+      "name": "0-7-12 couch",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": { "url": "/data/room_007/clusters/0-7-12_couch_cluster.ply" },
+      "group": "room_007",
+      "style": { "colorMode": "file", "pointSize": 3 },
+      "meta": { "room": "room_007", "object_code": "0-7-12", "class": "couch" }
+    },
+    {
+      "id": "obj-1-3-02",
+      "name": "1-3-02 chair",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": { "url": "/data/room_102/clusters/1-3-02_chair_cluster.ply" },
+      "group": "room_102",
+      "style": { "colorMode": "file", "pointSize": 3 },
+      "meta": { "room": "room_102", "object_code": "1-3-02", "class": "chair" }
+    }
+  ]
+}

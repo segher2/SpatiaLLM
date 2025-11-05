@@ -1,0 +1,1 @@
+{"version":3,"file":"parse-gltf-animations.d.ts","sourceRoot":"","sources":["../../src/parsers/parse-gltf-animations.ts"],"names":[],"mappings":"AAIA,OAAO,EAAiC,KAAK,iBAAiB,EAAC,MAAM,kBAAkB,CAAC;AACxF,OAAO,EACL,KAAK,aAAa,EAGnB,yCAAsC;AAIvC,wBAAgB,mBAAmB,CAAC,IAAI,EAAE,iBAAiB,GAAG,aAAa,EAAE,CAkB5E"}

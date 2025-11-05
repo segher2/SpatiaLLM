@@ -1,0 +1,115 @@
+[config] Mode: multi-rooms, Name: test_detached
+[config] Ratio: 0.2, RatioShell: 0.05, Voxel: none
+[clean-all] Removing ALL previous outputs...
+[clean-all] Removed: /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_all_rooms
+[clean-all] Cleanup complete!
+[mode:multi-rooms] Processing 10 rooms...
+[downsample] Running: node /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/scripts/downsample_and_prepare_room.mjs --room test_detached --outDir /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data --shellCopy /dev/null --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_001/results/shell/shell_001/0-1-5_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_002/results/shell/shell_002/0-2-3_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_003/results/shell/shell_003/0-3-3_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_004/results/shell/shell_004/0-6-0_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_005/results/shell/shell_005/0-7-3_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_001/results/shell/shell_001/1-1-0_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_002/results/shell/shell_002/1-2-0_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_003/results/shell/shell_003/1-3-0_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_004/results/shell/shell_004/1-4-0_shell.ply --cluster /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_005/results/shell/shell_005/1-5-0_shell.ply --acceptAnyPly --ratio 0.2
+[clusters] found 10 ply files
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_001/results/shell/shell_001/0-1-5_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-1-5_shell.ply (ratio=0.2, voxel=-)
+[cluster] 0-1-5_shell: 4166919 -> 833383
+[uobb] computing UOBB for 0-1-5_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-1-5_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_002/results/shell/shell_002/0-2-3_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-2-3_shell.ply (ratio=0.2, voxel=-)
+[cluster] 0-2-3_shell: 833527 -> 166705
+[uobb] computing UOBB for 0-2-3_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-2-3_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_003/results/shell/shell_003/0-3-3_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-3-3_shell.ply (ratio=0.2, voxel=-)
+[cluster] 0-3-3_shell: 3203173 -> 640634
+[uobb] computing UOBB for 0-3-3_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-3-3_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_004/results/shell/shell_004/0-6-0_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-6-0_shell.ply (ratio=0.2, voxel=-)
+[cluster] 0-6-0_shell: 2866833 -> 573366
+[uobb] computing UOBB for 0-6-0_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-6-0_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_0/room_005/results/shell/shell_005/0-7-3_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-7-3_shell.ply (ratio=0.2, voxel=-)
+[cluster] 0-7-3_shell: 3536854 -> 707370
+[uobb] computing UOBB for 0-7-3_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/0-7-3_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_001/results/shell/shell_001/1-1-0_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-1-0_shell.ply (ratio=0.2, voxel=-)
+[cluster] 1-1-0_shell: 4659622 -> 931924
+[uobb] computing UOBB for 1-1-0_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-1-0_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_002/results/shell/shell_002/1-2-0_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-2-0_shell.ply (ratio=0.2, voxel=-)
+[cluster] 1-2-0_shell: 2424972 -> 484994
+[uobb] computing UOBB for 1-2-0_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-2-0_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_003/results/shell/shell_003/1-3-0_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-3-0_shell.ply (ratio=0.2, voxel=-)
+[cluster] 1-3-0_shell: 1906758 -> 381351
+[uobb] computing UOBB for 1-3-0_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-3-0_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_004/results/shell/shell_004/1-4-0_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-4-0_shell.ply (ratio=0.2, voxel=-)
+[cluster] 1-4-0_shell: 1834973 -> 366994
+[uobb] computing UOBB for 1-4-0_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-4-0_shell_uobb.ply
+[cluster] downsampling /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/output/floor_1/room_005/results/shell/shell_005/1-5-0_shell.ply -> /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-5-0_shell.ply (ratio=0.2, voxel=-)
+[cluster] 1-5-0_shell: 1343039 -> 268607
+[uobb] computing UOBB for 1-5-0_shell...
+[uobb] wrote computed UOBB to /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached/clusters/1-5-0_shell_uobb.ply
+[manifest] wrote /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/manifests/test_detached.json
+
+Done. In the viewer URL, use:
+  ?manifest=/manifests/test_detached.json
+[manifest] Updated roles to 'shell' in /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/manifests/test_detached.json
+
+✅ Visualization preparation complete!
+
+🌐 View in browser:
+   http://localhost:5173/?manifest=/manifests/test_detached.json
+
+📁 Data location: /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/public/data/test_detached
+📄 Manifest: public/manifests/test_detached.json
+
+
+[serve] Stopping any existing servers...
+No running servers found (no /tmp/dev_servers.pid)
+Killing any python api_server.py and npm dev processes...
+Done
+[serve] Previous servers stopped
+
+[serve] Starting both frontend and backend servers...
+[serve] Frontend: http://localhost:5173/
+[serve] Backend API: http://localhost:8090/
+[serve] Project root: /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline
+[serve] API server path: /Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/scripts/api_server.py
+
+> pointcloud-viewer@0.1.0 dev
+> vite --port 5173
+
+
+  VITE v5.4.21  ready in 513 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+
+✅ Both servers started!
+🌐 Open in browser: http://localhost:5173/?manifest=/manifests/test_detached.json
+
+Press Ctrl+C to stop both servers.
+
+node:events:497
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: read EIO
+    at TTY.onStreamRead (node:internal/stream_base_commons:216:20)
+Emitted 'error' event on Interface instance at:
+    at ReadStream.onerror (node:internal/readline/interface:246:10)
+    at ReadStream.emit (node:events:519:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  errno: -5,
+  code: 'EIO',
+  syscall: 'read'
+}
+
+Node.js v22.21.0
+
+❌ Error: Dev server exited with code 1
+Error: Dev server exited with code 1
+    at ChildProcess.<anonymous> (file:///Users/jacksonye/Documents/GitHub/Spariallm_geopipieline/web/pointcloud-viewer/scripts/prepare_visualization.mjs:283:16)
+    at ChildProcess.emit (node:events:519:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:304:5)

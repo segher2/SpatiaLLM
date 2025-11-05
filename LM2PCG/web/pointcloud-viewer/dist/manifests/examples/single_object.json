@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "title": "Single object demo",
+  "defaults": { "pointSize": 3 },
+  "items": [
+    {
+      "id": "obj-0-7-12",
+      "name": "0-7-12 couch",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": { "url": "/data/room_007/clusters/0-7-12_couch_cluster.ply" },
+      "group": "objects",
+      "visible": true,
+      "style": { "pointSize": 3, "colorMode": "file" },
+      "meta": { "object_code": "0-7-12", "class": "couch" }
+    }
+  ]
+}

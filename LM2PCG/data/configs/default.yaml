@@ -1,0 +1,39 @@
+# Pipeline parameters
+radius: 0.05   # radius: clustering neighborhood radius (in meters)
+min_cluster_size: 50   # min_cluster_size: discard clusters smaller than this many points
+max_neighbors: 150   # max_neighbors: kd-tree neighbor cap for clustering/featurization
+filter_factor: 0.70   # filter_factor: keep clusters whose average size >= filter_factor * global average
+no_filter_ratio: 2.0   # no_filter_ratio: if max_cluster_size / min_cluster_size <= this ratio, skip filtering
+
+# Color analysis parameters
+color_sample_n: 300       # number of RGB points to sample when analyzing cluster colors
+# Model selection penalty is not used in force-K=3 mode, but kept here for reference
+color_bic_k_penalty: 0    # set 0 to disable; not used when force K=3
+color_min_weight: 0.10    # discard components with weight < this
+color_max_stddev: 30.0    # discard components with any channel stddev > this (per-channel)
+# ΔE rule: single breakpoint: if ΔE < color_deltaE_keep then merge (drop lower-weight), else keep both
+color_deltaE_keep: 20.0   # ΔE*76 threshold
+
+# Reconstruction parameters
+# Poisson
+poisson_spacing_neighbors: 6   # neighbors for average spacing
+poisson_normal_neighbors: 18   # neighbors for jet normals & MST orientation
+poisson_min_oriented_fraction: 0.3   # MST-oriented normals fraction threshold; <0.3 -> skip Poisson
+poisson_require_closed: true         # require Poisson output to be a closed mesh
+poisson_invalid_ratio_vs_hull: 1.4   # if Poisson volume > ratio * convex hull volume -> invalid, use AF
+
+# AF (Advancing Front) parameters
+af_min_points: 3            # minimum number of points to attempt AF reconstruction
+af_require_closed: false    # require AF output to be closed; if false, accept open meshes
+
+# Global output formatting
+json_output: true           # if true, apps emit structured JSON (suitable for chatbots)
+
+# Viewer visualization parameters
+viewer_downsample_ratio: 0.2        # downsample ratio for cluster point clouds (0.0-1.0)
+viewer_downsample_ratio_shell: 0.05 # downsample ratio for shell/room point clouds (0.0-1.0)
+viewer_voxel_size: null             # optional: voxel size for spatial downsampling (in meters); null = use ratio
+viewer_shell_no_color: false        # if true, render shell in constant gray color instead of original colors
+viewer_point_size: 3                # default point size for rendering
+viewer_uobb_opacity: 0.2            # opacity for UOBB mesh rendering (0.0-1.0)
+viewer_uobb_color: [30, 144, 255]   # RGB color for UOBB meshes (default: dodger blue)

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "title": "Room shell + selected objects",
+  "defaults": { "pointSize": 3 },
+  "items": [
+    {
+      "id": "shell-room-007",
+      "name": "room_007 shell",
+      "kind": "pointcloud",
+      "role": "shell",
+      "source": { "url": "/data/room_007/shell.ply" },
+      "group": "room_007",
+      "style": { "colorMode": "constant", "color": [180, 180, 180], "pointSize": 3 },
+      "filters": { "labelExclude": [1, 3] }
+    },
+    {
+      "id": "obj-0-7-12",
+      "name": "0-7-12 couch",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": { "url": "/data/room_007/clusters/0-7-12_couch_cluster.ply" },
+      "group": "objects",
+      "style": { "colorMode": "file", "pointSize": 3 }
+    },
+    {
+      "id": "obj-0-7-15",
+      "name": "0-7-15 door",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": { "url": "/data/room_007/clusters/0-7-15_door_cluster.ply" },
+      "group": "objects",
+      "style": { "colorMode": "file", "pointSize": 3 }
+    }
+  ]
+}

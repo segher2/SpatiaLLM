@@ -1,0 +1,1 @@
+{"version":3,"file":"use-widget.d.ts","sourceRoot":"","sources":["../../src/utils/use-widget.ts"],"names":[],"mappings":"AAMA,OAAO,EAAM,MAAM,EAAE,KAAK,WAAW,EAA0B,MAAM,eAAe,CAAC;AAErF,wBAAgB,SAAS,CAAC,OAAO,SAAS,MAAM,EAAE,YAAY,SAAS,WAAW,EAChF,WAAW,EAAE;IAAC,KAAK,MAAM,EAAE,YAAY,GAAG,OAAO,CAAA;CAAC,EAClD,KAAK,EAAE,YAAY,GAClB,OAAO,CA+BT"}

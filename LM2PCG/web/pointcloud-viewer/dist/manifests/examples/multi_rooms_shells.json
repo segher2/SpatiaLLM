@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "title": "Multi-room shells",
+  "defaults": { "pointSize": 2 },
+  "items": [
+    {
+      "id": "shell-room-007",
+      "name": "room_007 shell",
+      "kind": "pointcloud",
+      "role": "shell",
+      "source": { "url": "/data/room_007/shell.ply" },
+      "group": "room_007",
+      "visible": true,
+      "style": { "pointSize": 2, "colorMode": "constant", "color": [180, 180, 180] },
+      "filters": { "labelExclude": [1, 3] }
+    },
+    {
+      "id": "shell-room-008",
+      "name": "room_008 shell",
+      "kind": "pointcloud",
+      "role": "shell",
+      "source": { "url": "/data/room_008/shell.ply" },
+      "group": "room_008",
+      "visible": true,
+      "style": { "pointSize": 2, "colorMode": "constant", "color": [180, 180, 180] },
+      "filters": { "labelExclude": [1, 3] }
+    }
+  ]
+}

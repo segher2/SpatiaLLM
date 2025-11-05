@@ -1,0 +1,10 @@
+object_id, room_id, floor_id, csv_id, obj_name, min_x, max_x, center_x,length, area, volume, ply_path, n_points
+0,7,0,0,chair,0,0,0,0,0,0,output_house\floor_0\room_007\chair_007.ply,13029
+0,7,0,0,combined,0,0,0,0,0,0,output_house\floor_0\room_007\combined_007.ply,2081608
+0,7,0,0,couch,0,0,0,0,0,0,output_house\floor_0\room_007\couch_007.ply,213796
+0,7,0,0,curtain,0,0,0,0,0,0,output_house\floor_0\room_007\curtain_007.ply,230357
+0,7,0,0,door,0,0,0,0,0,0,output_house\floor_0\room_007\door_007.ply,435681
+0,7,0,0,monitor,0,0,0,0,0,0,output_house\floor_0\room_007\monitor_007.ply,7482
+0,7,0,0,plant,0,0,0,0,0,0,output_house\floor_0\room_007\plant_007.ply,5463
+0,7,0,0,table,0,0,0,0,0,0,output_house\floor_0\room_007\table_007.ply,56992
+0,7,0,0,window,0,0,0,0,0,0,output_house\floor_0\room_007\window_007.ply,670741

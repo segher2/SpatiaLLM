@@ -1,0 +1,5 @@
+object_id, room_id, floor_id, csv_id, obj_name, min_x, max_x, center_x,length, area, volume, ply_path, n_points
+0,4,1,0,combined,0,0,0,0,0,0,output_house\floor_1\room_004\combined_004.ply,353951
+0,4,1,0,door,0,0,0,0,0,0,output_house\floor_1\room_004\door_004.ply,125608
+0,4,1,0,table,0,0,0,0,0,0,output_house\floor_1\room_004\table_004.ply,2550
+0,4,1,0,window,0,0,0,0,0,0,output_house\floor_1\room_004\window_004.ply,6462

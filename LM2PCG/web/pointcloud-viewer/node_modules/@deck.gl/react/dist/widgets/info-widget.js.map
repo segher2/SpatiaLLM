@@ -1,0 +1,1 @@
+{"version":3,"file":"info-widget.js","sourceRoot":"","sources":["../../src/widgets/info-widget.tsx"],"names":[],"mappings":"AAAA,UAAU;AACV,+BAA+B;AAC/B,oCAAoC;AAEpC,OAAO,EAAC,WAAW,EAAC,MAAM,kBAAkB,CAAC;AAE7C,OAAO,EAAC,SAAS,EAAC,+BAA4B;AAE9C;;GAEG;AACH,MAAM,CAAC,MAAM,UAAU,GAAG,CAAC,KAAsB,EAAE,EAAE;IACnD,SAAS,CAAC,WAAW,EAAE,KAAK,CAAC,CAAC;IAC9B,OAAO,IAAI,CAAC;AACd,CAAC,CAAC"}

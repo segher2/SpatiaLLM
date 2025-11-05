@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "title": "Room room_007",
+  "defaults": {
+    "pointSize": 3
+  },
+  "items": [
+    {
+      "id": "shell-room_007",
+      "name": "room_007 shell",
+      "kind": "pointcloud",
+      "role": "shell",
+      "source": {
+        "url": "/data/room_007/shell.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "uobb-room_007",
+      "name": "room_007 uobb",
+      "kind": "mesh",
+      "role": "uobb",
+      "source": {
+        "url": "/data/room_007/shell_uobb.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "color": [
+          30,
+          144,
+          255
+        ],
+        "opacity": 0.3
+      }
+    },
+    {
+      "id": "cluster-0-7-3_chair_cluster",
+      "name": "0-7-3_chair_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-3_chair_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-4_chair_cluster",
+      "name": "0-7-4_chair_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-4_chair_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-5_chair_cluster",
+      "name": "0-7-5_chair_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-5_chair_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-12_couch_cluster",
+      "name": "0-7-12_couch_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-12_couch_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-13_couch_cluster",
+      "name": "0-7-13_couch_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-13_couch_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-14_couch_cluster",
+      "name": "0-7-14_couch_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-14_couch_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-18_curtain_cluster",
+      "name": "0-7-18_curtain_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-18_curtain_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-19_curtain_cluster",
+      "name": "0-7-19_curtain_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-19_curtain_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-20_curtain_cluster",
+      "name": "0-7-20_curtain_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-20_curtain_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-21_curtain_cluster",
+      "name": "0-7-21_curtain_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-21_curtain_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-15_door_cluster",
+      "name": "0-7-15_door_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-15_door_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-16_door_cluster",
+      "name": "0-7-16_door_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-16_door_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-17_door_cluster",
+      "name": "0-7-17_door_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-17_door_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-6_monitor_cluster",
+      "name": "0-7-6_monitor_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-6_monitor_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-1_table_cluster",
+      "name": "0-7-1_table_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-1_table_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-2_table_cluster",
+      "name": "0-7-2_table_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-2_table_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-10_window_cluster",
+      "name": "0-7-10_window_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-10_window_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-11_window_cluster",
+      "name": "0-7-11_window_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-11_window_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-7_window_cluster",
+      "name": "0-7-7_window_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-7_window_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-8_window_cluster",
+      "name": "0-7-8_window_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-8_window_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    },
+    {
+      "id": "cluster-0-7-9_window_cluster",
+      "name": "0-7-9_window_cluster",
+      "kind": "pointcloud",
+      "role": "object",
+      "source": {
+        "url": "/data/room_007/clusters/0-7-9_window_cluster.ply"
+      },
+      "group": "room_007",
+      "visible": true,
+      "style": {
+        "colorMode": "file",
+        "pointSize": 3
+      }
+    }
+  ]
+}

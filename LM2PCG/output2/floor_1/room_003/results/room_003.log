@@ -1,0 +1,31 @@
+  Detected *shell* -> treat as single cluster, skip clustering and filtering
+File: shell_003.ply, points: 1906758, shell -> skip clustering/filtering
+  ✓ saved UOBB: output/floor_1/room_003/results/shell/shell_003/1-3-0_shell_uobb.ply
+  ✓ copied shell PLY: output/floor_1/room_003/results/shell/shell_003/1-3-0_shell.ply
+Saved 1/1 shell UOBB to: output/floor_1/room_003/results/shell/shell_003
+  Cluster size stats: min=57, max=60319, ratio=1058.23, no_filter_ratio=2 -> apply filtering
+File: door_003.ply, points: 83361, clusters(raw/filtered): 4/2
+  Avg cluster size: 20831, filter threshold (factor=0.7): 14581.7
+  - raw cluster 0: size=60319
+  - raw cluster 1: size=57
+  - raw cluster 2: size=22869
+  - raw cluster 3: size=79
+  - kept cluster 0: size=60319
+  - kept cluster 1: size=22869
+  ✓ saved UOBB: output/floor_1/room_003/results/filtered_clusters/door_003/1-3-1_door_uobb.ply
+  ✓ saved cluster PLY: output/floor_1/room_003/results/filtered_clusters/door_003/1-3-1_door_cluster.ply
+  ✓ saved UOBB: output/floor_1/room_003/results/filtered_clusters/door_003/1-3-2_door_uobb.ply
+  ✓ saved cluster PLY: output/floor_1/room_003/results/filtered_clusters/door_003/1-3-2_door_cluster.ply
+Saved 2/2 filtered clusters to: output/floor_1/room_003/results/filtered_clusters/door_003
+  Cluster size stats: min=55, max=84, ratio=1.52727, no_filter_ratio=2 -> skip filtering
+File: window_003.ply, points: 139, clusters(raw/filtered): 2/2
+  Avg cluster size: 69.5, filter threshold (factor=0.7): 48.65
+  - raw cluster 0: size=84
+  - raw cluster 1: size=55
+  - kept cluster 0: size=84
+  - kept cluster 1: size=55
+  ✓ saved UOBB: output/floor_1/room_003/results/filtered_clusters/window_003/1-3-3_window_uobb.ply
+  ✓ saved cluster PLY: output/floor_1/room_003/results/filtered_clusters/window_003/1-3-3_window_cluster.ply
+  ✓ saved UOBB: output/floor_1/room_003/results/filtered_clusters/window_003/1-3-4_window_uobb.ply
+  ✓ saved cluster PLY: output/floor_1/room_003/results/filtered_clusters/window_003/1-3-4_window_cluster.ply
+Saved 2/2 filtered clusters to: output/floor_1/room_003/results/filtered_clusters/window_003
