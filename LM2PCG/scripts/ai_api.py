@@ -76,9 +76,9 @@ def build_dir(root: Path) -> Path:
 
 
 def output_root(root: Path) -> Path:
-    # Check for OUTPUT_DIR environment variable, default to "output2"
-    # (Changed from "output" to "output2" to match current database)
-    output_dir_name = os.getenv("OUTPUT_DIR", "output2")
+    # Check for OUTPUT_DIR environment variable, default to "../data/output"
+    # Updated to match in-place processing location (data/output is at repo parent level)
+    output_dir_name = os.getenv("OUTPUT_DIR", "../data/output")
     return root / output_dir_name
 
 
