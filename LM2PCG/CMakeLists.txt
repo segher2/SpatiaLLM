@@ -53,6 +53,11 @@ add_executable(pcg_bbox src/apps/pcg_bbox.cpp)
 target_include_directories(pcg_bbox PRIVATE include ${PCL_INCLUDE_DIRS})
 target_link_libraries(pcg_bbox PRIVATE pcg ${PCL_LIBRARIES})
 
+# BBox single file app (for user-selected clusters)
+add_executable(pcg_bbox_single src/apps/pcg_bbox_single.cpp)
+target_include_directories(pcg_bbox_single PRIVATE include ${PCL_INCLUDE_DIRS})
+target_link_libraries(pcg_bbox_single PRIVATE pcg ${PCL_LIBRARIES})
+
 # BBox generator app (for testing)
 
 

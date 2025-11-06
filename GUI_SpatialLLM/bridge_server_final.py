@@ -117,6 +117,64 @@ def get_image_path(filename: str):
 def health():
     return jsonify({"status": "healthy"})
 
+@app.route('/save_object', methods=['POST'])
+def save_object():
+    """Run integrate_object_to_room.py to save the selected object"""
+    import subprocess
+    import os
+    
+    try:
+        # Find script path
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(current_dir)
+        script_path = os.path.join(root_dir, "SAM23D", "integrate_object_to_room.py")
+        
+        if not os.path.exists(script_path):
+            return jsonify({"error": f"Script not found: {script_path}"}), 404
+        
+        # Run the script and capture output
+        result = subprocess.run(
+            ["python3", script_path],
+            capture_output=True,
+            text=True,
+            timeout=60  # Longer timeout for AI API call
+        )
+        
+        if result.returncode == 0:
+            # Parse output for success information
+            output = result.stdout.strip()
+            print(f"✅ integrate_object_to_room.py output:\n{output}")
+            
+            # Extract key information from output
+            # Expected format: "✅ Integration complete: 0-2-14_door"
+            lines = output.split('\n')
+            success_info = {
+                "success": True,
+                "output": output
+            }
+            
+            # Try to parse structured info from output
+            for line in lines:
+                if "object_code:" in line.lower():
+                    success_info["object_code"] = line.split(":")[-1].strip()
+                elif "room:" in line.lower():
+                    success_info["room"] = line.split(":")[-1].strip()
+                elif "semantic_label:" in line.lower() or "label:" in line.lower():
+                    success_info["semantic_label"] = line.split(":")[-1].strip()
+                elif "cluster_file:" in line.lower():
+                    success_info["cluster_file"] = line.split(":")[-1].strip()
+            
+            return jsonify(success_info)
+        else:
+            error_msg = result.stderr if result.stderr else result.stdout
+            print(f"❌ integrate_object_to_room.py error:\n{error_msg}")
+            return jsonify({"success": False, "error": "Integration failed", "details": error_msg}), 500
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Script timeout (>60s)"}), 500
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/show_results', methods=['POST'])
 def show_results():
     """Run visualize_latest.py and return the viewer URL"""
