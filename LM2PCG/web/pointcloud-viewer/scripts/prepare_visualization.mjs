@@ -387,13 +387,12 @@ async function handleRoomMode(args, config) {
   const shell = shells.length > 0 ? shells[0] : null;
   
   // Find clusters directory from room structure
-  // Shell path: .../room_007/results/shell/shell_007/0-7-0_shell.ply
-  // Clusters:   .../room_007/results/filtered_clusters/
+  // Shell path: .../room_005/0-5-0_shell.ply
+  // Clusters:   .../room_005/results/filtered_clusters/
   let clustersDir = null;
   if (shell) {
-    const shellDir = path.dirname(shell); // .../shell_007
-    const shellParent = path.dirname(shellDir); // .../shell
-    const resultsDir = path.dirname(shellParent); // .../results
+    const roomDir = path.dirname(shell); // .../room_005
+    const resultsDir = path.join(roomDir, 'results'); // .../room_005/results
     clustersDir = path.join(resultsDir, 'filtered_clusters');
     if (!fs.existsSync(clustersDir)) {
       console.warn(`[mode:room] Clusters directory not found: ${clustersDir}`);
