@@ -96,7 +96,7 @@ rule panoramas:
     params:
         outdir = PANOS_DIR
     shell:
-        "python py_scripts/get_images_and_poses.py "
+        "python Preprocessing_pipeline/get_images_and_poses.py "
         "{input.e57} --outfolder {params.outdir} "
         "&& python -c \"open(r'{output.success}','w').write('OK\\n')\""
 
@@ -112,7 +112,7 @@ rule per_class:
         attribute = ATTRIBUTE,
         id = lambda wc: NAME2ID[wc.name]
     shell:
-        "python py_scripts/las_to_ply.py "
+        "python Preprocessing_pipeline/las_to_ply.py "
         "--input {input.las} --output {output.ply} "
         "--attribute {params.attribute} --ids {params.id} --mode separate"
 
@@ -129,7 +129,7 @@ rule combined_group:
         ids = lambda wc: ",".join(str(i) for i in GROUPS[wc.gname]["ids"]),
         las = LAS
     shell:
-        "python py_scripts/las_to_ply.py "
+        "python Preprocessing_pipeline/las_to_ply.py "
         "--input {params.las} --output {output.ply} "
         "--attribute {params.attribute} --ids {params.ids} --mode combined"
 
@@ -147,7 +147,7 @@ checkpoint split_rooms_from_combined:
         expand_dist=EXPAND_DIST,
         outdir=ROOMS_DIR
     shell:
-        "python py_scripts/segment_rooms_mark.py "
+        "python Preprocessing_pipeline/segment_rooms_mark.py "
         "--input_dir {input.indir} --output_dir {params.outdir} "
         "--voxel {params.voxel} "
         "--grid {params.grid} "
@@ -236,7 +236,7 @@ rule bvg_per_room:
             out_succ.write_text("EMPTY\n")
         else:
             shell(
-                "python py_scripts/ransac_and_plane_detection.py "
+                "python Preprocessing_pipeline/ransac_and_plane_detection.py "
                 "--in-dir {params.room_dir} "
                 "--out-dir {params.out_dir} "
                 "--glob {params.ply_glob} "
@@ -264,7 +264,7 @@ rule obj_per_room:
         w_cover = W_COVER,
         w_complex = W_COMPLEX
     shell:
-        "python py_scripts/polyfit_for_rooms.py "
+        "python Preprocessing_pipeline/polyfit_for_rooms.py "
         "--in-dir {params.in_dir} --out-dir {params.out_dir} "
         "--solver {params.solver} --w-data {params.w_data} "
         "--w-cover {params.w_cover} --w-complex {params.w_complex} "
@@ -310,7 +310,7 @@ rule csvs_per_room:
 
         obj = objs[0]
 
-        script = Path("py_scripts/room_calculator.py")
+        script = Path("Prepro cessing_pipeline/room_calculator.py")
 
         cmd = [
             sys.executable, str(script),
@@ -338,9 +338,9 @@ rule pcg_room_final:
     run:
         import platform, subprocess, shutil
         from pathlib import Path
+
         pcg_cfg = config.get("pcg", {})
-        IN  = pcg_cfg.get("in",  "data/output")
-        OUT = pcg_cfg.get("out", "data/output")
+        IN  = pcg_cfg.get("in", "data/output")
         exes = pcg_cfg.get("exe", {})
         system = platform.system()
 
@@ -350,18 +350,15 @@ rule pcg_room_final:
         if system == "Windows":
             exe_win = exes.get("windows")
             if exe_win and Path(exe_win).exists():
-                Path(OUT).mkdir(parents=True, exist_ok=True)
-                run_cmd([exe_win, IN, OUT])
+                run_cmd([exe_win, IN])
             elif shutil.which("wsl"):
                 exe_wsl = exes.get("wsl", "LM2PCG/build/pcg_room")
                 IN_WSL  = subprocess.check_output(["wsl", "wslpath", "-a", IN]).decode().strip()
-                OUT_WSL = subprocess.check_output(["wsl", "wslpath", "-a", OUT]).decode().strip()
                 EXE_WSL = subprocess.check_output(["wsl", "wslpath", "-a", exe_wsl]).decode().strip()
-                run_cmd(["wsl", "bash", "-lc", f'mkdir -p "{OUT_WSL}" && "{EXE_WSL}" "{IN_WSL}" "{OUT_WSL}"'])
+                run_cmd(["wsl", "bash", "-lc", f'"{EXE_WSL}" "{IN_WSL}"'])
             else:
                 raise RuntimeError("Windows detected, but neither a native pcg_room.exe nor WSL is available.")
         else:
             exe_posix = exes.get("linux" if system == "Linux" else "macos",
                                  "LM2PCG/build/pcg_room")
-            Path(OUT).mkdir(parents=True, exist_ok=True)
-            run_cmd([exe_posix, IN, OUT])
+            run_cmd([exe_posix, IN])

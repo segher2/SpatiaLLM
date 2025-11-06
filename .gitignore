@@ -2,6 +2,16 @@
 .env
 *.env
 
+# unwanted files
+*.las
+*.e57
+*.ply
+*.png
+*.jpg
+*.json
+
+
+
 # Python
 __pycache__/
 *.py[cod]
@@ -37,6 +47,7 @@ Thumbs.db
 
 # Logs
 *.log
+
 
 # Output directories
 output/
