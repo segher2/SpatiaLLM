@@ -11,11 +11,14 @@ import streamlit.components.v1 as components
 import requests
 import time
 from streamlit_js_eval import streamlit_js_eval
+from dotenv import load_dotenv
 import mutli_room_agent2 as room_agent
 import ai_api_wrapper as ai_wrapper
 import enrich_room_types as enrich_rooms
 import room_database
 
+# Load environment variables from .env file
+load_dotenv()
 
 # Page config
 st.set_page_config(page_title="Spatial Understanding via Multi-Modal LLM", layout="wide")
@@ -68,45 +71,28 @@ if 'valid_panoramas' not in st.session_state:
 st.markdown(
     """
     <style>
+    /* Force black background everywhere */
+    .stApp {
+        background-color: #0e1117 !important;
+        background-image: none !important;
+    }
+    section[data-testid="stAppViewContainer"] { 
+        background-color: #0e1117 !important;
+    }
+    /* Sidebar black background */
+    section[data-testid="stSidebar"] {
+        background-color: #0e1117 !important;
+    }
+    /* White text for visibility */
     section[data-testid="stAppViewContainer"] { color: white !important; }
     section[data-testid="stAppViewContainer"] * { color: white !important; }
-    section[data-testid="stAppViewContainer"] div[data-testid="stNotification"] {
-        background: var(--background-color, rgba(0,0,0,0.25)) !important;
-        border: 1px solid var(--secondary-background-color, rgba(255,255,255,0.2)) !important;
-        color: white !important;
-    }
-    .st-emotion-cache-1an99fx, .st-emotion-cache-3uj0rx { color: #fff !important; }
-    .st-emotion-cache-1iitq1e, .st-emotion-cache-1fee4w7, .st-dy { background: rgba(240,242,246,0.1) !important; color: #fff !important; }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-
-# Background image
-def add_bg_from_local(image_file):
-    try:
-        with open(image_file, "rb") as f:
-            encoded = base64.b64encode(f.read()).decode()
-        st.markdown(
-            f"""
-            <style>
-            .stApp {{
-                background-image: url("data:image/png;base64,{encoded}");
-                background-attachment: fixed;
-                background-size: cover;
-            }}
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-    except FileNotFoundError:
-        st.markdown("<style>.stApp { background: #0e1117; }</style>", unsafe_allow_html=True)
-
-
-# Use absolute path for background image
+# Script directory for paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-add_bg_from_local(os.path.join(SCRIPT_DIR, "bg_streamlit.png"))
 
 # Initialize states
 for key, val in {
@@ -118,7 +104,9 @@ for key, val in {
     "overlay_url": None,
     "yaw": 0,
     "pitch": 0,
-    "hfov": 90
+    "hfov": 90,
+    "processing_complete": False,
+    "las_path": None
 }.items():
     if key not in st.session_state:
         st.session_state[key] = val
@@ -133,16 +121,82 @@ virtual_btn = st.sidebar.button("Virtual Mode", use_container_width=True)
 
 # Logic for sidebar buttons
 if start_btn:
+    # Reset to main page
+    st.session_state.page = "main"
+    
     if st.session_state.agent:
         st.warning("Session already active.")
     else:
         with st.spinner("Initializing Spatial AI Agent..."):
             try:
-                exec("room_database")
-                exec("enrich_rooms")
-                exec("ai_wrapper")
-                st.session_state.agent = room_agent
-                st.session_state.chat_ui = []
+                # Use absolute path to database in LM2PCG
+                db_path = os.path.join(SCRIPT_DIR, "..", "LM2PCG", "spatial_rooms.db")
+                
+                # Initialize agent with thread-safe check_same_thread=False
+                import sqlite3
+                import pandas as pd
+                
+                original_connect = sqlite3.connect
+                
+                def thread_safe_connect(*args, **kwargs):
+                    kwargs['check_same_thread'] = False
+                    return original_connect(*args, **kwargs)
+                
+                sqlite3.connect = thread_safe_connect
+                
+                st.session_state.agent = room_agent.FinalSpatialAIAgent(
+                    database_path=db_path,
+                    use_images=True  # Enable image analysis
+                )
+                
+                # Restore original connect
+                sqlite3.connect = original_connect
+                
+                # Generate database summary table
+                agent_instance = st.session_state.agent
+                rooms = agent_instance.rooms_df
+                floors = agent_instance.floors_df
+                
+                # Build summary table
+                summary_data = []
+                for _, room in rooms.iterrows():
+                    room_id = room['room_id']
+                    floor_num = room['floor_number']
+                    room_num = room.get('room_number', '???')
+                    room_type = room.get('room_type', 'unknown')
+                    
+                    # Get images count (panoramas)
+                    cursor = agent_instance.conn.cursor()
+                    cursor.execute("SELECT COUNT(*) FROM images WHERE room_id = ?", (room_id,))
+                    image_count = cursor.fetchone()[0]
+                    
+                    # Get planes count
+                    cursor.execute("SELECT COUNT(*) FROM planes WHERE room_id = ?", (room_id,))
+                    plane_count = cursor.fetchone()[0]
+                    
+                    # Get objects count
+                    cursor.execute("SELECT COUNT(*) FROM objects WHERE room_id = ?", (room_id,))
+                    obj_count = cursor.fetchone()[0]
+                    
+                    summary_data.append({
+                        "Room ID": room_id,
+                        "Floor": floor_num,
+                        "Room #": room_num,
+                        "Type": room_type.title(),
+                        "Objects": obj_count,
+                        "Images": image_count,
+                        "Planes": plane_count
+                    })
+                
+                summary_df = pd.DataFrame(summary_data)
+                
+                welcome_msg = "🏠 **Spatial AI Agent Initialized Successfully!**\n\n"
+                welcome_msg += f"**Database:** {len(floors)} floors, {len(rooms)} rooms\n\n"
+                welcome_msg += "**Room Summary Table:**"
+                
+                # Store the summary dataframe in session state
+                st.session_state.summary_df = summary_df
+                st.session_state.chat_ui = [("assistant", welcome_msg)]
                 st.success("Spatial AI Agent initialized.")
             except Exception as e:
                 st.error(f"Failed to start AI Agent: {e}")
@@ -150,16 +204,88 @@ if start_btn:
 elif restart_btn:
     with st.spinner("Restarting AI Agent..."):
         try:
-            exec("room_database")
-            exec("enrich_rooms")
-            exec("ai_wrapper")
-            st.session_state.agent = room_agent
-            st.session_state.chat_ui = []
+            # Reset to main page
+            st.session_state.page = "main"
+            
+            # Use absolute path to database in LM2PCG
+            db_path = os.path.join(SCRIPT_DIR, "..", "LM2PCG", "spatial_rooms.db")
+            
+            # Initialize agent with thread-safe check_same_thread=False
+            import sqlite3
+            import pandas as pd
+            
+            original_connect = sqlite3.connect
+            
+            def thread_safe_connect(*args, **kwargs):
+                kwargs['check_same_thread'] = False
+                return original_connect(*args, **kwargs)
+            
+            sqlite3.connect = thread_safe_connect
+            
+            st.session_state.agent = room_agent.FinalSpatialAIAgent(
+                database_path=db_path,
+                use_images=True  # Enable image analysis
+            )
+            
+            # Restore original connect
+            sqlite3.connect = original_connect
+            
+            # Generate database summary table
+            agent_instance = st.session_state.agent
+            rooms = agent_instance.rooms_df
+            floors = agent_instance.floors_df
+            
+            # Build summary table
+            summary_data = []
+            for _, room in rooms.iterrows():
+                room_id = room['room_id']
+                floor_num = room['floor_number']
+                room_num = room.get('room_number', '???')
+                room_type = room.get('room_type', 'unknown')
+                
+                # Get images count (panoramas)
+                cursor = agent_instance.conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM images WHERE room_id = ?", (room_id,))
+                image_count = cursor.fetchone()[0]
+                
+                # Get planes count
+                cursor.execute("SELECT COUNT(*) FROM planes WHERE room_id = ?", (room_id,))
+                plane_count = cursor.fetchone()[0]
+                
+                # Get objects count
+                cursor.execute("SELECT COUNT(*) FROM objects WHERE room_id = ?", (room_id,))
+                obj_count = cursor.fetchone()[0]
+                
+                summary_data.append({
+                    "Room ID": room_id,
+                    "Floor": floor_num,
+                    "Room #": room_num,
+                    "Type": room_type.title(),
+                    "Objects": obj_count,
+                    "Images": image_count,
+                    "Planes": plane_count
+                })
+            
+            summary_df = pd.DataFrame(summary_data)
+            
+            welcome_msg = "🔄 **Spatial AI Agent Restarted Successfully!**\n\n"
+            welcome_msg += f"**Database:** {len(floors)} floors, {len(rooms)} rooms\n\n"
+            welcome_msg += "**Room Summary Table:**"
+            
+            # Store the summary dataframe in session state
+            st.session_state.summary_df = summary_df
+            st.session_state.chat_ui = [("assistant", welcome_msg)]
             st.success("Agent restarted successfully!")
+            st.rerun()
         except Exception as e:
             st.error(f"Restart failed: {e}")
 
 elif end_btn:
+    # Reset to main page and clear agent
+    st.session_state.page = "main"
+    st.session_state.agent = None
+    st.session_state.chat_ui = []
+    
     st.sidebar.warning("🛑 Preparing to end session...")
 
     countdown_placeholder = st.empty()
@@ -614,6 +740,13 @@ if st.session_state.page == "virtual":
 
 
     # Main UI
+    # Add "Back to Main" button at the top
+    if st.button("← Back to Chat Mode", key="back_to_main"):
+        st.session_state.page = "main"
+        st.rerun()
+    
+    st.divider()
+    
     n = len(pano_files)
     current_idx = st.session_state.pano_idx = wrap_idx(st.session_state.pano_idx, n)
     current_path = pano_files[current_idx]
@@ -704,7 +837,7 @@ if st.session_state.page == "virtual":
 #  Chat UI
 agent = st.session_state.get("agent")
 
-if agent:
+if agent and st.session_state.page != "virtual":
     st.divider()
     st.subheader("Spatial AI Chat")
 
@@ -713,9 +846,12 @@ if agent:
         st.session_state["chat_ui"] = []
 
     # Display existing chat
-    for role, content in st.session_state["chat_ui"]:
+    for idx, (role, content) in enumerate(st.session_state["chat_ui"]):
         with st.chat_message(role):
             st.write(content)
+            # Show summary table after first assistant message (welcome message)
+            if role == "assistant" and idx == 0 and "summary_df" in st.session_state:
+                st.dataframe(st.session_state.summary_df, use_container_width=True, hide_index=True)
 
     # Input box
     user_q = st.chat_input("Ask about the room… (type 'overview' or 'quit' for commands)")
@@ -733,16 +869,6 @@ if agent:
             st.session_state["chat_ui"].append(
                 ("assistant", "Goodbye! (You can reset the session or exit virtual mode.)")
             )
-
-        elif cleaned == "overview":
-            try:
-                overview = agent.get_room_summary(agent.current_room_id)
-            except Exception:
-                # fallback if attribute not available
-                overview = "Overview not available for this dataset."
-            with st.chat_message("assistant"):
-                st.markdown(f"<pre style='color:white;'>{overview}</pre>", unsafe_allow_html=True)
-            st.session_state["chat_ui"].append(("assistant", overview))
 
         else:
             with st.spinner("Analyzing spatial data…"):
