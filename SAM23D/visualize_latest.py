@@ -178,39 +178,51 @@ def kill_old_viewer_server(port=5174):
         print(f"ERROR_KILLING: {e}")
 
 
+
 def start_viewer_server(viewer_base):
     """Kill old server and start a new viewer server."""
-    port = 5174
-    
-    # Always kill old server first
-    kill_old_viewer_server(port)
+    # Try common Vite ports
+    for port in [5174, 5173]:
+        kill_old_viewer_server(port)
     
     # Start the server in the background
-    process = subprocess.Popen(
-        ["npm", "run", "dev"],
-        cwd=viewer_base,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True  # Detach from parent
-    )
-    
-    # Give it a few seconds to start
-    time.sleep(5)
-    
-    # Verify it started
-    try:
-        result = subprocess.run(
-            ['lsof', '-ti', f':{port}'],
-            capture_output=True,
-            text=True,
-            timeout=2
+    # Capture output to a log file for debugging
+    log_file = viewer_base / "server.log"
+    with open(log_file, 'w') as log:
+        process = subprocess.Popen(
+            ["npm", "run", "dev"],
+            cwd=viewer_base,
+            stdin=subprocess.DEVNULL,  # Prevent stdin read errors
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            start_new_session=True  # Detach from parent
         )
-        if result.returncode == 0 and result.stdout.strip():
-            print(f"SERVER_STATUS: started (PID: {process.pid})")
-        else:
-            print(f"SERVER_STATUS: warning - may not have started correctly")
-    except Exception:
-        print(f"SERVER_STATUS: started (PID: {process.pid}) - verification failed")
+    
+    print(f"SERVER_PID: {process.pid}")
+    print(f"SERVER_LOG: {log_file}")
+    
+    # Wait for Vite to write its startup message
+    print("⏳ Waiting for server to start...")
+    time.sleep(3)
+    
+    # Parse the actual port from the log file
+    actual_port = None
+    if log_file.exists():
+        with open(log_file) as f:
+            content = f.read()
+            # Look for "Local:   http://localhost:XXXX/"
+            if 'Local:' in content and 'localhost:' in content:
+                import re
+                match = re.search(r'localhost:(\d+)', content)
+                if match:
+                    actual_port = int(match.group(1))
+                    print(f"✅ Server started on port {actual_port}")
+    
+    if actual_port is None:
+        print("⚠️  Could not detect port from server log, assuming 5173...")
+        actual_port = 5173
+    
+    return True, actual_port
 
 
 def main():
@@ -247,11 +259,15 @@ def main():
     manifest_path = create_manifest(latest_ply, point_count, viewer_base)
     print(f"MANIFEST: {manifest_path}")
     
-    start_viewer_server(viewer_base)
+    success, actual_port = start_viewer_server(viewer_base)
     
-    url = "http://localhost:5174/?manifest=sam2_latest.json"
+    url = f"http://localhost:{actual_port}/?manifest=sam2_latest.json"
     print(f"VIEWER_URL: {url}")
     print(url)
+    
+    if not success:
+        print("\n⚠️  Server health check failed. Try accessing the URL manually.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -117,6 +117,46 @@ def get_image_path(filename: str):
 def health():
     return jsonify({"status": "healthy"})
 
+@app.route('/show_results', methods=['POST'])
+def show_results():
+    """Run visualize_latest.py and return the viewer URL"""
+    import subprocess
+    import os
+    
+    try:
+        # Find script path
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(current_dir)
+        script_path = os.path.join(root_dir, "SAM23D", "visualize_latest.py")
+        
+        if not os.path.exists(script_path):
+            return jsonify({"error": f"Script not found: {script_path}"}), 404
+        
+        # Run the script and capture output
+        result = subprocess.run(
+            ["python3", script_path],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        if result.returncode == 0:
+            # Extract the URL from the last line of output
+            lines = result.stdout.strip().split('\n')
+            url = lines[-1] if lines else None
+            
+            if url and url.startswith('http'):
+                return jsonify({"url": url, "ok": True})
+            else:
+                return jsonify({"error": "Could not extract viewer URL", "output": result.stdout}), 500
+        else:
+            return jsonify({"error": "Script failed", "stderr": result.stderr}), 500
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "Script timeout"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/click', methods=['POST'])
 def handle_click():
     global click_data, latest_overlay
@@ -268,6 +308,7 @@ def set_completion():
     data = request.get_json()
     processing_status["completed"] = data.get("completed", False)
     processing_status["las_path"] = data.get("las_path")
+    processing_status["overlay_base64"] = data.get("overlay_base64")  # Save overlay
     print(f"Processing marked as complete: {processing_status['las_path']}")
     return jsonify({"ok": True})
 

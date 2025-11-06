@@ -270,16 +270,44 @@ if st.session_state.page == "virtual":
           <div id="loadingOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;border-radius:8px;">
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:white;">
               <div style="font-size:48px;margin-bottom:20px;">⏳</div>
-              <div style="font-size:24px;font-weight:bold;">Processing SAM2 Segmentation...</div>
+              <div style="font-size:24px;font-weight:bold;">Processing segmentation...</div>
               <div style="font-size:16px;margin-top:10px;opacity:0.8;">This may take a few seconds</div>
               <div style="margin-top:20px;">
                 <div class="spinner"></div>
               </div>
             </div>
           </div>
+          <div id="showResultsButton" style="display:none;position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;">
+            <button onclick="showResults()" style="background:#4CAF50;color:white;border:none;padding:15px 30px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.3);transition:all 0.3s;">
+              🔍 Show Results
+            </button>
+          </div>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
         <script>
+          // Function to open viewer with latest results
+          function showResults() {{
+            console.log("🔍 Show Results button clicked");
+            // Call the Python backend to run visualize_latest.py
+            fetch("{BRIDGE_SERVER_URL}/show_results", {{
+              method: "POST",
+              headers: {{ "Content-Type": "application/json" }}
+            }})
+            .then(response => response.json())
+            .then(data => {{
+              if (data.url) {{
+                console.log("Opening viewer at:", data.url);
+                window.open(data.url, '_blank');
+              }} else if (data.error) {{
+                alert("Error: " + data.error);
+              }}
+            }})
+            .catch(err => {{
+              console.error("Error showing results:", err);
+              alert("Failed to open viewer: " + err.message);
+            }});
+          }}
+          
           const viewer = pannellum.viewer("panoViewer", {{
             type: "equirectangular",
             panorama: "{img_data_url}",
@@ -416,6 +444,9 @@ if st.session_state.page == "virtual":
                           console.log("✅✅ SAM2 + mask2cluster processing complete!");
                           console.log("LAS file:", data.sam2_result.las_path);
                           
+                          // Show the "Show Results" button
+                          document.getElementById('showResultsButton').style.display = 'block';
+                          
                           // Notify the parent window (Streamlit) via a simple backend endpoint
                           // Store the completion status on the server side
                           fetch("{BRIDGE_SERVER_URL}/set_completion", {{
@@ -423,11 +454,12 @@ if st.session_state.page == "virtual":
                             headers: {{ "Content-Type": "application/json" }},
                             body: JSON.stringify({{
                               las_path: data.sam2_result.las_path,
-                              completed: true
+                              completed: true,
+                              overlay_base64: data.sam2_result.overlay_base64
                             }})
                           }})
                           .then(() => {{
-                            console.log("✅ Notified backend of completion");
+                            console.log("✅ Notified backend of completion (with overlay saved)");
                           }})
                           .catch(err => console.error("Error notifying completion:", err));
                         }}
@@ -566,15 +598,14 @@ if st.session_state.page == "virtual":
                 if completion_data.get("completed"):
                     st.session_state.processing_complete = True
                     st.session_state.las_path = completion_data.get("las_path")
+                    # Save the overlay to session state to persist it across reruns
+                    overlay_base64 = completion_data.get("overlay_base64")
+                    if overlay_base64:
+                        st.session_state.overlay_url = f"data:image/png;base64,{overlay_base64}"
                     st.rerun()
         except:
             pass  # Ignore errors during polling
     
-    # Add a button to manually check completion status
-    if not st.session_state.processing_complete:
-        if st.button("🔄 Check if Processing Complete", key="check_completion"):
-            st.rerun()
-
     # Display selected points
     if st.session_state.clicked_points:
         w, h = Image.open(current_path).size
