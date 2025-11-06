@@ -27,13 +27,42 @@ if 'outputs_cleaned' not in st.session_state:
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(current_dir)
-    outputs_dir = Path(root_dir) / "SAM23D" / "outputs"
     
+    # Clean SAM23D/outputs (previous segmentation results)
+    outputs_dir = Path(root_dir) / "SAM23D" / "outputs"
     if outputs_dir.exists():
         shutil.rmtree(outputs_dir)
         outputs_dir.mkdir(parents=True, exist_ok=True)
+        print("✅ Cleaned SAM23D/outputs directory")
     
     st.session_state.outputs_cleaned = True
+
+# Build valid panoramas set from data/output
+if 'valid_panoramas' not in st.session_state:
+    from pathlib import Path
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.dirname(current_dir)
+    
+    valid_stems = set()
+    data_output_dir = Path(root_dir) / "data" / "output"
+    
+    if data_output_dir.exists():
+        for floor_dir in data_output_dir.glob("floor_*"):
+            if not floor_dir.is_dir():
+                continue
+            for room_dir in floor_dir.glob("room_*"):
+                if not room_dir.is_dir():
+                    continue
+                # Find all .jpg panorama files in room directory
+                for jpg_file in room_dir.glob("*.jpg"):
+                    valid_stems.add(jpg_file.stem)
+        
+        print(f"✅ Found {len(valid_stems)} valid panoramas in data/output")
+    else:
+        print(f"⚠️  data/output directory not found")
+    
+    st.session_state.valid_panoramas = valid_stems
 
 # Styling
 st.markdown(
@@ -194,11 +223,26 @@ if not check_bridge_server():
 if st.session_state.page == "virtual":
     # Use absolute path based on script location (SCRIPT_DIR already defined above)
     PANOS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "data", "input", "panoramas", "images")
-    pano_files = sorted(
+    
+    # Get all panorama files
+    all_pano_files = sorted(
         glob.glob(os.path.join(PANOS_DIR, "*.jpg"))
         + glob.glob(os.path.join(PANOS_DIR, "*.jpeg"))
         + glob.glob(os.path.join(PANOS_DIR, "*.png"))
     )
+    
+    # Filter to only include panoramas that exist in data/output
+    valid_panoramas = st.session_state.get('valid_panoramas', set())
+    pano_files = [
+        f for f in all_pano_files 
+        if os.path.splitext(os.path.basename(f))[0] in valid_panoramas
+    ]
+    
+    # Log filtering results
+    if len(all_pano_files) != len(pano_files):
+        filtered_count = len(all_pano_files) - len(pano_files)
+        print(f"🔍 Filtered out {filtered_count} panoramas not in data/output")
+        print(f"📊 Showing {len(pano_files)}/{len(all_pano_files)} panoramas")
 
 
     def _natural_key(s: str):
@@ -277,7 +321,10 @@ if st.session_state.page == "virtual":
               </div>
             </div>
           </div>
-          <div id="showResultsButton" style="display:none;position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;">
+          <div id="actionButtons" style="display:none;position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;">
+            <button onclick="saveNewObject()" style="background:#FF9800;color:white;border:none;padding:15px 30px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.3);transition:all 0.3s;margin-right:10px;">
+              💾 Save New Object
+            </button>
             <button onclick="showResults()" style="background:#4CAF50;color:white;border:none;padding:15px 30px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.3);transition:all 0.3s;">
               🔍 Show Results
             </button>
@@ -285,6 +332,44 @@ if st.session_state.page == "virtual":
         </div>
         <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
         <script>
+          // Function to save new object to room
+          function saveNewObject() {{
+            console.log("💾 Save New Object button clicked");
+            
+            // Show loading message
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Processing...';
+            btn.disabled = true;
+            
+            fetch("{BRIDGE_SERVER_URL}/save_object", {{
+              method: "POST",
+              headers: {{ "Content-Type": "application/json" }}
+            }})
+            .then(response => response.json())
+            .then(data => {{
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+              
+              if (data.success) {{
+                alert("✅ Object saved successfully!\\n\\n" + 
+                      "Room: " + data.room + "\\n" +
+                      "Object: " + data.object_code + " (" + data.semantic_label + ")\\n" +
+                      "Files: " + data.cluster_file + "\\n\\n" +
+                      "💬 You can interact with this new object using its Object ID (" + data.object_code + ")");
+                console.log("✅ Save result:", data);
+              }} else if (data.error) {{
+                alert("❌ Error: " + data.error);
+              }}
+            }})
+            .catch(err => {{
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+              console.error("Error saving object:", err);
+              alert("Failed to save object: " + err.message);
+            }});
+          }}
+          
           // Function to open viewer with latest results
           function showResults() {{
             console.log("🔍 Show Results button clicked");
@@ -444,8 +529,8 @@ if st.session_state.page == "virtual":
                           console.log("✅✅ SAM2 + mask2cluster processing complete!");
                           console.log("LAS file:", data.sam2_result.las_path);
                           
-                          // Show the "Show Results" button
-                          document.getElementById('showResultsButton').style.display = 'block';
+                          // Show the action buttons (Save New Object + Show Results)
+                          document.getElementById('actionButtons').style.display = 'block';
                           
                           // Notify the parent window (Streamlit) via a simple backend endpoint
                           // Store the completion status on the server side
@@ -615,48 +700,6 @@ if st.session_state.page == "virtual":
             st.text(f"Point {i}: pitch={p['pitch']:.2f}°, yaw={p['yaw']:.2f}° → pixel=({px},{py})")
     else:
         st.caption("Click inside the panorama (max 5 points).")
-
-    # Show "Show Results" button when processing is complete
-    if st.session_state.processing_complete:
-        st.success("✅ SAM2 and Mask2Cluster processing complete!")
-        st.divider()
-        
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            if st.button("🔍 Show Results", use_container_width=True, type="primary"):
-                # Execute visualize_latest.py and get the URL
-                try:
-                    # Find script path: go up one level from GUI_SpatialLLM to SpatialLLM root
-                    current_dir = os.path.dirname(os.path.abspath(__file__))
-                    root_dir = os.path.dirname(current_dir)
-                    script_path = os.path.join(root_dir, "SAM23D", "visualize_latest.py")
-                    
-                    if not os.path.exists(script_path):
-                        st.error(f"Script not found: {script_path}")
-                    else:
-                        result = subprocess.run(
-                            ["python3", script_path],
-                            capture_output=True,
-                            text=True,
-                            timeout=30
-                        )
-                        
-                        if result.returncode == 0:
-                            # Extract URL from last line
-                            url = result.stdout.strip().split('\n')[-1]
-                            if url.startswith('http'):
-                                # Open URL in new tab using streamlit_js_eval
-                                streamlit_js_eval(js_expressions=f"window.open('{url}', '_blank')")
-                            else:
-                                st.error("Failed to get viewer URL")
-                                st.code(result.stdout)
-                        else:
-                            st.error(f"Error running visualize_latest.py: {result.stderr}")
-                except Exception as e:
-                    st.error(f"Failed to launch viewer: {str(e)}")
-        with col2:
-            if st.session_state.las_path:
-                st.caption(f"📁 Point cloud saved: `{os.path.basename(st.session_state.las_path)}`")
 
 #  Chat UI
 agent = st.session_state.get("agent")

@@ -112,18 +112,30 @@ def run_sam2_prediction(points, image_filename):
         stem = Path(image_filename).stem
         overlay_path = output_dir / f"{stem}_overlay.png"
         mask_path = output_dir / f"{stem}_binary_mask.png"
+        cropped_path = output_dir / f"{stem}_cropped.png"
 
-        # Save images
+        # Save overlay and mask
         final_img.save(overlay_path)
         Image.fromarray((best_mask * 255).astype(np.uint8)).save(mask_path)
 
+        # Create cropped panorama using mask
+        # Apply mask to original image (keep only masked region, rest transparent)
+        cropped_pano = np.zeros((*original_image.shape[:2], 4), dtype=np.uint8)
+        cropped_pano[best_mask > 0, :3] = original_image[best_mask > 0]  # RGB channels
+        cropped_pano[best_mask > 0, 3] = 255  # Alpha channel (fully opaque where mask is true)
+        
+        # Save cropped panorama
+        Image.fromarray(cropped_pano).save(cropped_path)
+
         print(f" Saved overlay: {overlay_path}")
         print(f" Saved binary mask: {mask_path}")
+        print(f" Saved cropped panorama: {cropped_path}")
 
         return {
             "success": True,
             "overlay_path": str(overlay_path),
             "mask_path": str(mask_path),
+            "cropped_path": str(cropped_path),
             "mask_shape": best_mask.shape,
             "score": float(scores[0]),
             "image_size": original_image.shape
