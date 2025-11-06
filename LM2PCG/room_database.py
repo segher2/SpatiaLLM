@@ -389,6 +389,7 @@ class SpatialDatabaseCorrect:
         """
         NEW: Import geometric plane data from planes_data.csv.
         FIX: Updated column mapping to use 'group_name' and 'class' from CSV.
+        ENHANCEMENT: Calculate and update room floor area from floor planes.
         """
         if not os.path.exists(csv_path):
             print(f"✗ Plane File not found: {csv_path}")
@@ -410,6 +411,8 @@ class SpatialDatabaseCorrect:
                     return 0
 
             count = 0
+            total_floor_area = 0.0
+            
             for _, row in df.iterrows():
                 self.cursor.execute("""
                     INSERT INTO planes (
@@ -426,9 +429,27 @@ class SpatialDatabaseCorrect:
                     float(row['area']),
                 ))
                 count += 1
+                
+                # Sum up floor plane areas to calculate room floor area
+                if str(row['class']).lower() == 'floor':
+                    total_floor_area += float(row['area'])
 
             self.conn.commit()
-            print(f"✓ Imported {count} planes from {os.path.basename(csv_path)}")
+            
+            # Update room's total_area with calculated floor area
+            if total_floor_area > 0:
+                self.cursor.execute("""
+                    UPDATE rooms 
+                    SET total_area = ? 
+                    WHERE room_id = ?
+                """, (total_floor_area, room_id))
+                self.conn.commit()
+                print(f"✓ Imported {count} planes from {os.path.basename(csv_path)}")
+                print(f"   📐 Calculated floor area: {total_floor_area:.2f}m²")
+            else:
+                print(f"✓ Imported {count} planes from {os.path.basename(csv_path)}")
+                print(f"   ⚠️  No floor planes found, area remains 0")
+            
             return count
 
         except Exception as e:
@@ -655,13 +676,20 @@ def populate_database_fixed():
     print("   Use populate_database_from_manifest() for manifest-based database generation.")
     print()
 
-    # NOTE: The data path is explicitly set here to match your requested structure.
-    DATA_ROOT = "output2"
+    # Use absolute path to ensure it works from any working directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    DATA_ROOT = os.path.join(script_dir, "..", "data", "output")
+    
+    if not os.path.exists(DATA_ROOT):
+        print(f"❌ Data directory not found: {DATA_ROOT}")
+        return
+    
     print(f" POPULATING DATABASE WITH UPDATED SCHEMA (Root: {DATA_ROOT})")
     print("=" * 70)
 
-    # Initialize database
-    db = SpatialDatabaseCorrect("spatial_rooms.db")
+    # Initialize database (also use script directory for database path)
+    db_path = os.path.join(script_dir, "spatial_rooms.db")
+    db = SpatialDatabaseCorrect(db_path)
 
     # Scan data directory (old method)
     structure = db.scan_data_directory(DATA_ROOT)
@@ -695,15 +723,26 @@ def populate_database_fixed():
 
 def populate_database_from_manifest():
     """
-    NEW: Populate database based on rooms_manifest.csv files.
+    Populate the database using rooms_manifest.csv files.
     This is the recommended method that uses manifest files as the source of truth.
     """
-    DATA_ROOT = "output2"
+    # Use absolute path to ensure it works from any working directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    DATA_ROOT = os.path.join(script_dir, "..", "data", "output")
+    
+    # Verify the path exists
+    if not os.path.exists(DATA_ROOT):
+        print(f"❌ Data directory not found: {DATA_ROOT}")
+        print(f"   Script location: {script_dir}")
+        print(f"   Current working directory: {os.getcwd()}")
+        return
+    
     print(f"📋 POPULATING DATABASE FROM ROOMS_MANIFEST.CSV (Root: {DATA_ROOT})")
     print("=" * 70)
 
-    # Initialize database
-    db = SpatialDatabaseCorrect("spatial_rooms.db")
+    # Initialize database (also use script directory for database path)
+    db_path = os.path.join(script_dir, "spatial_rooms.db")
+    db = SpatialDatabaseCorrect(db_path)
 
     # Scan data directory based on manifest files
     structure = db.scan_from_manifest(DATA_ROOT)
@@ -724,8 +763,8 @@ def populate_database_from_manifest():
             print(
                 f"    {status}{obj_status}{plane_status}{img_status} {room_name} (ID:{room_data['room_id_from_manifest']}, type:{room_data['room_type']}, images:{room_data['image_count']})")
 
-    # Populate database (no image requirement for manifest mode)
-    db.populate_from_structure(structure, require_images=False)
+    # Populate database (REQUIRE images - only add rooms with panoramas)
+    db.populate_from_structure(structure, require_images=True)
 
     # Show final overview
     print("\n" + "=" * 70)

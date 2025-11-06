@@ -14,7 +14,9 @@ import traceback
 load_dotenv()
 
 # --- Configuration ---
-DATABASE_PATH = "spatial_rooms.db"
+# Use absolute path to ensure it works from any working directory
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_PATH = os.path.join(SCRIPT_DIR, "spatial_rooms.db")
 # Define the possible room types for classification
 POSSIBLE_ROOM_TYPES = [
     'living_room', 'kitchen', 'bedroom', 'bathroom', 'office',

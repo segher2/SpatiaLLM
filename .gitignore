@@ -53,3 +53,11 @@ Thumbs.db
 output/
 output2/
 outputs/
+
+# Database files
+*.db
+spatial_rooms.db
+
+# Visualization artifacts
+LM2PCG/web/pointcloud-viewer/public/data/
+LM2PCG/web/pointcloud-viewer/public/manifests/*.json
