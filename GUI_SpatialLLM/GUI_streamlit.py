@@ -18,7 +18,10 @@ import enrich_room_types as enrich_rooms
 import room_database
 
 # Load environment variables from .env file
-load_dotenv()
+# .env is located in LM2PCG/data/configs/
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ENV_PATH = os.path.join(SCRIPT_DIR, "..", "LM2PCG", "data", "configs", ".env")
+load_dotenv(ENV_PATH)
 
 # Page config
 st.set_page_config(page_title="Spatial Understanding via Multi-Modal LLM", layout="wide")
