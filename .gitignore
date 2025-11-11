@@ -61,3 +61,4 @@ spatial_rooms.db
 # Visualization artifacts
 LM2PCG/web/pointcloud-viewer/public/data/
 LM2PCG/web/pointcloud-viewer/public/manifests/*.json
+SAM23D/SAM2/checkpoints/*.pt

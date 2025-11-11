@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 from PIL import Image
 import traceback
 
-# Load environment variables (ensure API_KEY and endpoint are set)
 load_dotenv()
 
 # --- Configuration ---
@@ -23,7 +22,7 @@ POSSIBLE_ROOM_TYPES = [
     'hallway', 'dining_room', 'closet', 'balcony', 'garage', 'laundry_room', 'unknown'
 ]
 # LLM Model to use for classification
-LLM_MODEL = "gpt-4o-mini" # Or your preferred vision model
+LLM_MODEL = "gpt-4o-mini"
 # Delay between API calls to avoid rate limits (adjust if needed)
 API_DELAY_SECONDS = 1
 
@@ -34,10 +33,10 @@ def get_db_connection(db_path: str) -> Optional[Tuple[sqlite3.Connection, sqlite
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        print(f"✅ Connected to database: {db_path}")
+        print(f"Success :  Connected to database: {db_path}")
         return conn, cursor
     except sqlite3.Error as e:
-        print(f"❌ Database connection error: {e}")
+        print(f"Error :  Database connection error: {e}")
         return None
 
 def get_unknown_rooms(cursor: sqlite3.Cursor) -> List[Tuple[int, str]]:
@@ -54,7 +53,7 @@ def get_unknown_rooms(cursor: sqlite3.Cursor) -> List[Tuple[int, str]]:
         # Return list of (room_id, room_code) tuples
         return [(row[0], f"{row[1]}-{int(row[2])}") for row in rooms]
     except sqlite3.Error as e:
-        print(f"❌ Error fetching unknown rooms: {e}")
+        print(f"Error :  Error fetching unknown rooms: {e}")
         return []
 
 def get_room_images_paths(cursor: sqlite3.Cursor, room_id: int) -> List[str]:
@@ -64,13 +63,13 @@ def get_room_images_paths(cursor: sqlite3.Cursor, room_id: int) -> List[str]:
         paths = cursor.fetchall()
         return [row[0] for row in paths]
     except sqlite3.Error as e:
-        print(f"❌ Error fetching images for room {room_id}: {e}")
+        print(f"Error :  Error fetching images for room {room_id}: {e}")
         return []
 
 def process_image(image_path: str) -> Optional[str]:
     """Loads, resizes, and encodes an image to base64."""
     if not os.path.exists(image_path):
-        print(f"  ❌ Image file NOT FOUND at path: {image_path}")
+        print(f"Error :  Image file NOT FOUND at path: {image_path}")
         return None
     try:
         with Image.open(image_path) as img:
@@ -123,11 +122,11 @@ def classify_room_type(client: AzureOpenAI, image_base64_list: List[str]) -> str
             if room_type in llm_response:
                 return room_type # Return the first valid type found
 
-        print(f"  ⚠️ LLM response ('{llm_response}') didn't match known types cleanly. Defaulting to unknown.")
+        print(f"  LLM response ('{llm_response}') didn't match known types cleanly. Defaulting to unknown.")
         return 'unknown' # Default if no match or unexpected response
 
     except Exception as e:
-        print(f"  ❌ OpenAI API call failed: {e}")
+        print(f"Error :  OpenAI API call failed: {e}")
         traceback.print_exc()
         return 'unknown'
 
@@ -136,24 +135,24 @@ def update_room_type(conn: sqlite3.Connection, cursor: sqlite3.Cursor, room_id: 
     try:
         cursor.execute("UPDATE rooms SET room_type = ? WHERE room_id = ?", (new_type, room_id))
         conn.commit()
-        print(f"  ✅ Updated room {room_id} type to '{new_type}'")
+        print(f"Success :  Updated room {room_id} type to '{new_type}'")
     except sqlite3.Error as e:
-        print(f"  ❌ Error updating room {room_id}: {e}")
+        print(f"Error :  Error updating room {room_id}: {e}")
 
 # --- Main Execution ---
 def main():
-    print("🚀 Starting Room Type Enrichment Script...")
+    print(" Starting Room Type Enrichment Script...")
 
     # 1. Initialize OpenAI Client
     try:
         client = AzureOpenAI(
             azure_endpoint="https://azure-openai-scanplan.openai.azure.com/",
             api_key=os.getenv("API_KEY"),
-            api_version="2025-02-01-preview" # Or your API version
+            api_version="2025-02-01-preview"
         )
-        print("✅ OpenAI client initialized.")
+        print("Success :  OpenAI client initialized.")
     except Exception as e:
-        print(f"❌ Failed to initialize OpenAI client: {e}. Ensure AZURE_OPENAI_ENDPOINT and API_KEY are set.")
+        print(f"Error :  Failed to initialize OpenAI client: {e}. Ensure AZURE_OPENAI_ENDPOINT and API_KEY are set.")
         return # Cannot proceed without the client
 
     # 2. Connect to Database
@@ -165,11 +164,11 @@ def main():
     # 3. Get Rooms to Process
     unknown_rooms = get_unknown_rooms(cursor)
     if not unknown_rooms:
-        print("✅ No rooms needing classification found. Database is up-to-date.")
+        print("Success :  No rooms needing classification found. Database is up-to-date.")
         conn.close()
         return
 
-    print(f"🔍 Found {len(unknown_rooms)} rooms to classify (unknown/some room types).")
+    print(f" Found {len(unknown_rooms)} rooms to classify (unknown/some room types).")
 
     # 4. Process Each Room
     processed_count = 0
@@ -181,7 +180,7 @@ def main():
         # Get image paths
         image_paths = get_room_images_paths(cursor, room_id)
         if not image_paths:
-            print(f"  ℹ️ No images found for room {room_id}. Skipping classification.")
+            print(f"  No images found for room {room_id}. Skipping classification.")
             continue # Skip if no images
 
         # Process images to base64 (take only the first one for simplicity, or modify to use more)
@@ -192,11 +191,11 @@ def main():
                  image_base64_list.append(img_b64)
 
         if not image_base64_list:
-            print(f"  ℹ️ Failed to process images for room {room_id}. Skipping classification.")
+            print(f"  Failed to process images for room {room_id}. Skipping classification.")
             continue
 
         # Classify using LLM
-        print("  🧠 Classifying room type using vision model...")
+        print("   Classifying room type using vision model...")
         classified_type = classify_room_type(client, image_base64_list)
 
         # Update Database if classification is not 'unknown'
@@ -204,7 +203,7 @@ def main():
             update_room_type(conn, cursor, room_id, classified_type)
             updated_count += 1
         else:
-            print(f"  ℹ️ Classification result was 'unknown' for room {room_id}. No update made.")
+            print(f"  Classification result was 'unknown' for room {room_id}. No update made.")
 
         # Optional delay
         if API_DELAY_SECONDS > 0:
@@ -212,7 +211,7 @@ def main():
 
     # 5. Clean up
     conn.close()
-    print("\n✅ Enrichment script finished.")
+    print("\nSuccess :  Enrichment script finished.")
     print(f"   Processed {processed_count} rooms.")
     print(f"   Updated {updated_count} rooms with new types.")
 

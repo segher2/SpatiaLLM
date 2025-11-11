@@ -6,17 +6,15 @@ import re
 import json
 import textwrap
 import subprocess  # Required for AiApiWrapper's functions
-from typing import Dict, List, Optional, Any, Tuple, Union  # Added Union
+from typing import Dict, List, Optional, Any, Tuple, Union
 from openai import AzureOpenAI
 from dotenv import load_dotenv
 from PIL import Image
 import io
 import traceback
-# import webcolors  # <-- REMOVED
-import time  # For retry delay
 
 # Assuming ai_api_wrapper.py is in the same directory or accessible via PYTHONPATH
-# UPDATED: Import VisOutput
+# Import VisOutput
 from ai_api_wrapper import AiApiWrapper, VisOutput
 
 # Load environment variables (e.g., API_KEY, AZURE_OPENAI_ENDPOINT)
@@ -28,18 +26,11 @@ class FinalSpatialAIAgent:
     A spatial AI agent that interacts with a room database and an external
     C++/Python pipeline to answer queries about architectural spaces.
     Includes capability to trigger point cloud visualizations and suggest them.
-
-    V4 Changes:
-    - Uses a two-call LLM system to dynamically determine query scope.
-    - Color analysis (CLR) passes raw RGB values to LLM.
-    - Distance (BBD) tool triggered by NLP uses correct room context.
-    - Proactive visualization links always generated in interactive mode.
-    - Refined scope classification logic.
     """
 
     def __init__(self, database_path: str = "spatial_rooms.db", use_images: bool = False):
         """Initializes the agent, connects to the database, and loads initial data."""
-        print("🚀 Initializing Final Spatial AI Agent (LLM Scope V4)...")  # Version Bump
+        print(" Initializing Final Spatial AI Agent (LLM Scope V4)...") 
         
         # Use absolute paths to work from any directory
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -59,14 +50,14 @@ class FinalSpatialAIAgent:
         api_script_path = os.path.join(script_dir, "scripts", "ai_api.py")
         self.api_wrapper = AiApiWrapper(api_script_path=api_script_path)
         if not self.api_wrapper.is_ready:
-            print("⚠️ WARNING: External C++ API wrapper is NOT ready. Volume/Color/Distance queries will fail.")
+            print(" WARNING: External C++ API wrapper is NOT ready. Volume/Color/Distance queries will fail.")
 
         # --- Database Connection ---
         try:
             self.conn = sqlite3.connect(database_path)
-            print(f"✅ Connected to database: {database_path}")
+            print(f"Success :  Connected to database: {database_path}")
         except sqlite3.Error as e:
-            print(f"❌ CRITICAL: Database connection failed: {e}")
+            print(f"Error :  CRITICAL: Database connection failed: {e}")
             raise  # Agent cannot function without the database
 
         # --- OpenAI Client Initialization ---
@@ -74,7 +65,7 @@ class FinalSpatialAIAgent:
             # Ensure required environment variables are present
             api_key = os.getenv("API_KEY")
             azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT",
-                                       "https://azure-openai-scanplan.openai.azure.com/")  # Default if not set
+                                       "https://azure-openai-scanplan.openai.azure.com/")
             if not api_key:
                 raise ValueError("API_KEY environment variable not set.")
             if not azure_endpoint:
@@ -83,11 +74,11 @@ class FinalSpatialAIAgent:
             self.client = AzureOpenAI(
                 azure_endpoint=azure_endpoint,
                 api_key=api_key,
-                api_version="2025-02-01-preview"  # Keep API version consistent
+                api_version="2025-02-01-preview" 
             )
-            print("✅ OpenAI client initialized")
+            print("Success :  OpenAI client initialized")
         except Exception as e:
-            print(f"❌ CRITICAL: OpenAI client initialization failed: {e}")
+            print(f"Error :  CRITICAL: OpenAI client initialization failed: {e}")
             if self.conn: self.conn.close()  # Close DB connection if client fails
             raise  # Agent requires the LLM client
 
@@ -95,7 +86,7 @@ class FinalSpatialAIAgent:
         self._load_dataframes()
         self._set_initial_room_context()
 
-        print("✅ Final Spatial AI Agent initialized and ready.")
+        print("Success :  Final Spatial AI Agent initialized and ready.")
 
     @staticmethod
     def _rgb_to_color_name(rgb: Tuple[int, int, int]) -> str:
@@ -152,7 +143,7 @@ class FinalSpatialAIAgent:
     def _load_dataframes(self):
         """Loads floor and room data from the database into pandas DataFrames."""
         if not self.conn:
-            print("❌ Cannot load DataFrames: Database connection is not available.")
+            print("Error :  Cannot load DataFrames: Database connection is not available.")
             return
 
         try:
@@ -171,7 +162,7 @@ class FinalSpatialAIAgent:
                 for col in essential_cols:
                     if col not in self.rooms_df.columns:
                         print(
-                            f"⚠️ Warning: Essential column '{col}' missing from 'rooms' table. Creating with defaults.")
+                            f" Warning: Essential column '{col}' missing from 'rooms' table. Creating with defaults.")
                         if col == 'room_type':
                             self.rooms_df['room_type'] = 'unknown'
                         elif col == 'room_number':
@@ -198,31 +189,31 @@ class FinalSpatialAIAgent:
                 if self.rooms_df['room_number'].str.isdigit().all():
                     self.rooms_df['room_number'] = self.rooms_df['room_number'].str.zfill(3)
                 else:
-                    print("⚠️ Warning: 'room_number' column contains non-numeric values. Skipping zero-padding.")
+                    print(" Warning: 'room_number' column contains non-numeric values. Skipping zero-padding.")
 
             if not self.floors_df.empty and 'floor_number' in self.floors_df.columns:
                 self.floors_df['floor_number'] = pd.to_numeric(self.floors_df['floor_number'], errors='coerce').fillna(
                     0).astype(int)
 
-            print(f"✅ Found {len(self.floors_df)} floors and {len(self.rooms_df)} rooms in the database.")
+            print(f"Success :  Found {len(self.floors_df)} floors and {len(self.rooms_df)} rooms in the database.")
             
             # Print summary table
             self._print_database_summary()
 
         except pd.io.sql.DatabaseError as e:
-            print(f"❌ Database error loading initial data: {e}")
+            print(f"Error :  Database error loading initial data: {e}")
         except Exception as e:
-            print(f"❌ Unexpected error loading initial data: {e}")
+            print(f"Error :  Unexpected error loading initial data: {e}")
             traceback.print_exc()
 
     def _print_database_summary(self):
         """Prints a summary table of all floors and rooms in the database."""
         if self.rooms_df.empty:
-            print("\n⚠️ No rooms data available for summary.\n")
+            print("\n No rooms data available for summary.\n")
             return
         
         print("\n" + "=" * 95)
-        print("📊 DATABASE SUMMARY")
+        print(" DATABASE SUMMARY")
         print("=" * 95)
         
         # Group by floor
@@ -239,7 +230,7 @@ class FinalSpatialAIAgent:
                     if not floor_match.empty:
                         floor_name = floor_match.iloc[0]['floor_name']
                 
-                print(f"\n🏢 FLOOR {floor_num} ({floor_name})")
+                print(f"\n FLOOR {floor_num} ({floor_name})")
                 print("-" * 95)
                 print(f"{'ID':<6} {'Room Code':<15} {'Room Type':<20} {'Objects':<10} {'Panoramas':<12} {'Planes CSV':<12}")
                 print("-" * 95)
@@ -272,7 +263,7 @@ class FinalSpatialAIAgent:
                         pano_display = "0 images"
                     
                     # Check for planes in database
-                    planes_csv_status = "❌ No planes"
+                    planes_csv_status = "Error: No planes"
                     try:
                         plane_count = pd.read_sql_query(
                             "SELECT COUNT(*) as count FROM planes WHERE room_id = ?",
@@ -280,9 +271,9 @@ class FinalSpatialAIAgent:
                             params=(room_id,)
                         ).iloc[0]['count']
                         if plane_count > 0:
-                            planes_csv_status = f"✅ {plane_count} planes"
+                            planes_csv_status = f"Success: {plane_count} planes"
                     except:
-                        planes_csv_status = "❌ No planes"
+                        planes_csv_status = "Error: No planes"
                     
                     print(f"{room_id:<6} {room_name:<15} {room_type:<20} {obj_count:<10} {pano_display:<12} {planes_csv_status:<12}")
         
@@ -291,7 +282,7 @@ class FinalSpatialAIAgent:
     def _set_initial_room_context(self):
         """Sets the initial room context, preferring a room with objects."""
         if not self.conn or self.rooms_df.empty or 'room_id' not in self.rooms_df.columns:
-            print("ℹ️ Cannot set initial room context: No rooms loaded or 'room_id' missing.")
+            print(" Cannot set initial room context: No rooms loaded or 'room_id' missing.")
             self.current_room_id = None
             return
 
@@ -317,23 +308,23 @@ class FinalSpatialAIAgent:
                 if not room_info_rows.empty:
                     room_info = room_info_rows.iloc[0]
                     print(
-                        f"✅ Auto-selected initial room with objects: {room_info.get('room_name', 'N/A')} on {room_info.get('floor_name', 'N/A')} (ID: {self.current_room_id})")
+                        f"Success: Auto-selected initial room with objects: {room_info.get('room_name', 'N/A')} on {room_info.get('floor_name', 'N/A')} (ID: {self.current_room_id})")
                 else:
-                    print(f"⚠️ Could not find details for auto-selected room ID: {self.current_room_id}")
+                    print(f"Error: Could not find details for auto-selected room ID: {self.current_room_id}")
             elif not self.rooms_df.empty:
                 self.current_room_id = int(self.rooms_df.iloc[0]['room_id'])
                 room_info = self.rooms_df.iloc[0]
                 print(
-                    f"✅ Defaulting to first room (may lack objects): {room_info.get('room_name', 'N/A')} (ID: {self.current_room_id})")
+                    f"Success: Defaulting to first room (may lack objects): {room_info.get('room_name', 'N/A')} (ID: {self.current_room_id})")
             else:
-                print("ℹ️ No rooms available to set as default context.")
+                print("No rooms available to set as default context.")
                 self.current_room_id = None
 
         except pd.io.sql.DatabaseError as e:
-            print(f"❌ Database error setting initial context: {e}")
+            print(f"Error: Database error setting initial context: {e}")
             self.current_room_id = None
         except Exception as e:
-            print(f"❌ Unexpected error setting initial context: {e}")
+            print(f"Error: Unexpected error setting initial context: {e}")
             traceback.print_exc()
             self.current_room_id = None
 
@@ -353,7 +344,6 @@ class FinalSpatialAIAgent:
 
         # Pattern 0: room code format (e.g., "0-4", "show 0-2", "room 1-3")
         # This matches floor-room code like "0-4" meaning floor 0, room 4
-        # IMPORTANT: Use negative lookbehind and lookahead to avoid matching object codes
         # Should NOT match: "9-9-9" (object code), "what color is 0-3-0" (object code)
         # Should match: "show room 0-2", "in 1-3", "display 0-4"
         pattern0 = r'(?:room|show|display|visualize|in|floor)\s+(\d+)-(\d+)\b(?!-\d+)'
@@ -379,7 +369,7 @@ class FinalSpatialAIAgent:
             print(f"   Parser found ref: room {room_num_str} (inferred floor {floor_num_int})")
             return (room_num_str, floor_num_int)
 
-        # NEW Pattern 3: Explicit room type name with NLP context
+        # Explicit room type name with NLP context
         # Matches: "show [the] kitchen", "visualize bedroom", "display bathroom", etc.
         if not self.rooms_df.empty and 'room_type' in self.rooms_df.columns:
             semantic_types = self.rooms_df['room_type'].unique().tolist()
@@ -410,7 +400,7 @@ class FinalSpatialAIAgent:
                             if len(match_df) > 1:
                                 rooms_list = ", ".join([f"room {row['room_number']} on floor {row['floor_number']}" 
                                                        for _, row in match_df.iterrows()])
-                                print(f"   ⚠️ Parser found multiple {room_type}s: {rooms_list}. Using first match.")
+                                print(f"    Parser found multiple {room_type}s: {rooms_list}. Using first match.")
                             
                             room_num_str = match_df.iloc[0].get('room_number', '000')
                             floor_num_int = int(match_df.iloc[0].get('floor_number', 0))
@@ -428,7 +418,7 @@ class FinalSpatialAIAgent:
                         if len(match_df) > 1:
                             rooms_list = ", ".join([f"room {row['room_number']} on floor {row['floor_number']}" 
                                                    for _, row in match_df.iterrows()])
-                            print(f"   ⚠️ Parser found multiple {room_type}s: {rooms_list}. Using first match.")
+                            print(f"    Parser found multiple {room_type}s: {rooms_list}. Using first match.")
                         
                         room_num_str = match_df.iloc[0].get('room_number', '000')
                         floor_num_int = int(match_df.iloc[0].get('floor_number', 0))
@@ -444,7 +434,7 @@ class FinalSpatialAIAgent:
     def _find_room_by_reference(self, room_num: str, floor_num: int) -> Optional[int]:
         """Finds a room_id in the DataFrame based on room and floor number."""
         if self.rooms_df.empty or 'room_number' not in self.rooms_df.columns or 'floor_number' not in self.rooms_df.columns:
-            print("⚠️ Cannot find room by reference: rooms_df not loaded or missing columns.")
+            print("Error: Cannot find room by reference: rooms_df not loaded or missing columns.")
             return None
 
         # Ensure comparison uses padded room number string
@@ -476,7 +466,7 @@ class FinalSpatialAIAgent:
                 JOIN floors f ON r.floor_id = f.floor_id WHERE r.room_id = ?
             """, self.conn, params=params)
             if room_df.empty:
-                print(f"ℹ️ No room details found in DB for ID: {room_id}")
+                print(f"Error: No room details found in DB for ID: {room_id}")
                 return {}
 
             objects_df = pd.read_sql_query("SELECT * FROM objects WHERE room_id = ? ORDER BY class, object_code",
@@ -495,7 +485,7 @@ class FinalSpatialAIAgent:
             self.room_cache[room_id] = summary
             return summary
         except Exception as e:
-            print(f"❌ Error getting room summary for room {room_id}: {e}")
+            print(f"Error: Getting room summary for room {room_id}: {e}")
             return {}
 
     def _get_available_rooms_list(self) -> List[str]:
@@ -516,7 +506,7 @@ class FinalSpatialAIAgent:
         """Retrieves summaries for all rooms, calculating aggregate stats."""
         all_rooms_data = []
         if self.rooms_df.empty or 'room_id' not in self.rooms_df.columns:
-            print("⚠️ Cannot get all rooms data: rooms_df not loaded or missing 'room_id'.")
+            print("Error: Cannot get all rooms data: rooms_df not loaded or missing 'room_id'.")
             return []
 
         for room_id in self.rooms_df['room_id'].tolist():
@@ -1223,12 +1213,12 @@ When data is insufficient:
             image_paths_tuples = self.conn.execute("SELECT image_path, image_name FROM images WHERE room_id = ?",
                                                    (room_id,)).fetchall()
             if not image_paths_tuples:
-                print(f"  ℹ️ No images found in database for room ID {room_id}")
+                print(f"  No images found in database for room ID {room_id}")
                 return []
 
             for image_path, image_name in image_paths_tuples:
                 if not image_path or not os.path.exists(image_path):
-                    print(f"  ❌ Image file NOT FOUND or path missing: {image_path or 'N/A'}")
+                    print(f"  Error: Image file NOT FOUND or path missing: {image_path or 'N/A'}")
                     continue
                 try:
                     with Image.open(image_path) as img:
@@ -1256,11 +1246,11 @@ When data is insufficient:
         if not messages: return messages
         last_message = messages[-1]
         if not isinstance(last_message, dict) or "role" not in last_message or "content" not in last_message:
-            print("⚠️ Cannot add images: Last message format incorrect.")
+            print(" Cannot add images: Last message format incorrect.")
             return messages
 
         if last_message.get("role") != "user":
-            print("ℹ️ Adding new user message container for images.")
+            print(" Adding new user message container for images.")
             messages.append({"role": "user", "content": [{"type": "text", "text": ""}]})
             last_message = messages[-1]
 
@@ -1287,12 +1277,12 @@ When data is insufficient:
         """Finds all object codes in a room matching a specific class name."""
         # Ensure room_id is valid before proceeding
         if room_id is None:
-            print("⚠️ Cannot find objects: Room ID is None.")
+            print(" Cannot find objects: Room ID is None.")
             return []
 
         room_summary = self.get_room_summary(room_id)
         if not room_summary or 'objects' not in room_summary:
-            print(f"⚠️ Cannot find objects: No summary or objects found for room ID {room_id}.")
+            print(f" Cannot find objects: No summary or objects found for room ID {room_id}.")
             return []
 
         class_name_lower = class_name.lower()
@@ -1354,26 +1344,26 @@ When data is insufficient:
         if keyword_found:
             if has_specific_codes:
                 target_codes = valid_codes
-                print(f"🛠️ Tool '{tool_to_run}' triggered by keyword and specific code(s): {target_codes}")
+                print(f" Tool '{tool_to_run}' triggered by keyword and specific code(s): {target_codes}")
             # --- NLP Trigger Logic (Uses tool_context_room_id) ---
             elif tool_context_room_id is not None:  # Check if context ID is available
                 if tool_to_run in ['CLR', 'VOL', 'VIS']:
                     print(
-                        f"ℹ️ Tool '{tool_to_run}' triggered by keyword, attempting NLP in room {tool_context_room_id}...")
+                        f" Tool '{tool_to_run}' triggered by keyword, attempting NLP in room {tool_context_room_id}...")
                     found_classes = self._find_classes_in_query(user_query)
                     if found_classes:
                         # Use _find_object_codes_by_class with the correct context ID
                         target_codes = self._find_object_codes_by_class(tool_context_room_id, found_classes[0])
                         if target_codes:
-                            print(f"🤖 NLP found {len(target_codes)} '{found_classes[0]}' codes for {tool_to_run}.")
+                            print(f" NLP found {len(target_codes)} '{found_classes[0]}' codes for {tool_to_run}.")
                         else:
                             print(
-                                f"⚠️ NLP found no '{found_classes[0]}' objects in room {tool_context_room_id} for {tool_to_run}.")
+                                f" NLP found no '{found_classes[0]}' objects in room {tool_context_room_id} for {tool_to_run}.")
                     else:
-                        print(f"⚠️ {tool_to_run} NLP failed: No recognizable object class found in query.")
+                        print(f" {tool_to_run} NLP failed: No recognizable object class found in query.")
                     if not target_codes and tool_to_run != 'VIS': return None
                 elif tool_to_run == 'BBD':
-                    print(f"ℹ️ Tool 'BBD' triggered by keyword, attempting NLP in room {tool_context_room_id}...")
+                    print(f" Tool 'BBD' triggered by keyword, attempting NLP in room {tool_context_room_id}...")
                     found_classes = self._find_classes_in_query(user_query)
                     if len(found_classes) == 2:
                         class1, class2 = found_classes[0], found_classes[1]
@@ -1391,14 +1381,14 @@ When data is insufficient:
                             if len(codes1) != 1: reason += f" found {len(codes1)} '{class1}' objects;"
                             if len(codes2) != 1: reason += f" found {len(codes2)} '{class2}' objects;"
                             print(
-                                f"⚠️ BBD NLP failed: Need exactly one of each object type ({reason} in room {tool_context_room_id}).")
+                                f" BBD NLP failed: Need exactly one of each object type ({reason} in room {tool_context_room_id}).")
                             return None
                     else:
                         print(
-                            f"⚠️ BBD NLP failed: Need exactly two object types mentioned, found {len(found_classes)}.")
+                            f" BBD NLP failed: Need exactly two object types mentioned, found {len(found_classes)}.")
                         return None
             else:  # Keyword found, but no specific codes and no context ID for NLP
-                print(f"⚠️ Tool '{tool_to_run}' triggered, but no specific codes and no room context for NLP.")
+                print(f" Tool '{tool_to_run}' triggered, but no specific codes and no room context for NLP.")
                 return None  # Let LLM ask for codes/context
 
         # Override NLP if specific codes were given (except for BBD triggered by NLP)
@@ -1413,7 +1403,7 @@ When data is insufficient:
         if tool_to_run in ['CLR', 'VOL']:
             if not target_codes: print(f"⚠️ {tool_to_run} skipped: No target codes found."); return None
             for code in target_codes:
-                print(f"🛠️ Executing {tool_to_run} for code: {code}")
+                print(f" Executing {tool_to_run} for code: {code}")
                 desc = f"{tool_to_run} ({code}): Execution failed."
                 if tool_to_run == 'CLR':
                     result = self.api_wrapper.analyze_dominant_color(code)
@@ -1449,13 +1439,13 @@ When data is insufficient:
                         codes_to_pass = [room_code]
                     else:
                         print(
-                            f"⚠️ VIS tool skipped: Could not get floor/room num for ID {tool_context_room_id}."); return None
+                            f" VIS tool skipped: Could not get floor/room num for ID {tool_context_room_id}."); return None
                 except Exception as e:
-                    print(f"⚠️ VIS error getting room code: {e}"); return None
+                    print(f" VIS error getting room code: {e}"); return None
 
-            if not codes_to_pass: print(f"⚠️ VIS skipped: No codes for room {tool_context_room_id}."); return None
+            if not codes_to_pass: print(f" VIS skipped: No codes for room {tool_context_room_id}."); return None
 
-            print(f"🛠️ Executing VIS for room {tool_context_room_id} with codes: {codes_to_pass}")
+            print(f" Executing VIS for room {tool_context_room_id} with codes: {codes_to_pass}")
             result = self.api_wrapper.visualize_point_cloud(codes_to_pass)
             if result:
                 desc = f"VIS (Room {tool_context_room_id}, Codes: {codes_to_pass}): Status: {result.status}."
@@ -1471,7 +1461,7 @@ When data is insufficient:
                 return None
             obj1, obj2 = target_codes[0], target_codes[1]
             if obj1 == obj2: return None
-            print(f"🛠️ Executing BBD for {obj1} and {obj2}")
+            print(f" Executing BBD for {obj1} and {obj2}")
             result = self.api_wrapper.calculate_bbox_distance(obj1, obj2)
             if result and hasattr(result, 'vector_1_to_2') and isinstance(result.vector_1_to_2, dict):
                 v = result.vector_1_to_2;
@@ -1487,7 +1477,7 @@ When data is insufficient:
             result_prefix = f"EXTERNAL API RESULT ({'MULTI-' if len(combined_results) > 1 else ''}TOOL {tool_to_run} via {source}):"
             return f"{result_prefix}\n" + "\n".join(combined_results)
         else:
-            print(f"ℹ️ Tool '{tool_to_run}' identified but could not execute.")
+            print(f"Tool '{tool_to_run}' identified but could not execute.")
             return None
 
             # --- LLM-based Scope Classifier ---
@@ -1502,7 +1492,7 @@ When data is insufficient:
                 room_info = self.rooms_df[self.rooms_df['room_id'] == self.current_room_id]
                 if not room_info.empty: current_room_name = room_info.iloc[0].get('room_name', 'None')
             except Exception as e:
-                print(f"⚠️ Error getting current room name: {e}")
+                print(f" Error getting current room name: {e}")
 
         # REFINED Prompt v4
         system_prompt = f"""
@@ -1523,7 +1513,7 @@ When data is insufficient:
         messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_query}]
 
         try:
-            print(f"🧠 Classifying query scope for: \"{user_query}\"")
+            print(f" Classifying query scope for: \"{user_query}\"")
             response = self.client.chat.completions.create(model="gpt-4o-mini", messages=messages, temperature=0.0,
                                                            max_tokens=150)
             response_content = response.choices[0].message.content
@@ -1536,15 +1526,15 @@ When data is insufficient:
                         scope = json_response.get("scope")
                         reasoning = json_response.get("reasoning", "N/A.")
                         if scope in ["SINGLE_ROOM", "MULTI_ROOM"]:
-                            print(f"🧠 Scope classified as: {scope} (Reason: {reasoning})")
+                            print(f" Scope classified as: {scope} (Reason: {reasoning})")
                             return scope
-                    print(f"⚠️ Scope classifier bad JSON structure: {response_content}")
+                    print(f" Scope classifier bad JSON structure: {response_content}")
                 except json.JSONDecodeError:
-                    print(f"⚠️ Scope classifier JSON parse error: {response_content}")
-            print("⚠️ Scope classifier invalid/missing response. Defaulting to SINGLE_ROOM.")
+                    print(f" Scope classifier JSON parse error: {response_content}")
+            print(" Scope classifier invalid/missing response. Defaulting to SINGLE_ROOM.")
             return "SINGLE_ROOM"
         except Exception as e:
-            print(f"❌ Scope classifier LLM call failed: {e}. Defaulting to SINGLE_ROOM.")
+            print(f" Error :  Scope classifier LLM call failed: {e}. Defaulting to SINGLE_ROOM.")
             return "SINGLE_ROOM"
 
     # --- Main Query Method ---
@@ -1597,24 +1587,24 @@ When data is insufficient:
                     target_room_ids = all_matching_room_ids
                     tool_context_room_id = explicitly_referenced_room_id  # Keep first as tool context
                     scope = f"multi_room_type_match_{len(all_matching_room_ids)}"
-                    print(f"🔍 Scope: Multiple Rooms of Same Type (showing all {len(all_matching_room_ids)} matching rooms)")
+                    print(f" Scope: Multiple Rooms of Same Type (showing all {len(all_matching_room_ids)} matching rooms)")
                     print(f"   (Tool NLP Context will use Room ID: {tool_context_room_id})")
                 else:
                     target_room_ids = [explicitly_referenced_room_id]
                     tool_context_room_id = explicitly_referenced_room_id
                     self.current_room_id = explicitly_referenced_room_id  # Update main context if specific room is focus
                     scope = f"room_{explicitly_referenced_room_id}"
-                    print(f"🔍 Scope: Specific Room (ID: {explicitly_referenced_room_id})")
+                    print(f" Scope: Specific Room (ID: {explicitly_referenced_room_id})")
             elif self.current_room_id is not None:
                 target_room_ids = [self.current_room_id]
                 tool_context_room_id = self.current_room_id
                 scope = f"room_{self.current_room_id}"
-                print(f"🔍 Scope: Current Room Context (ID: {self.current_room_id})")
+                print(f" Scope: Current Room Context (ID: {self.current_room_id})")
             else:
                 scope = "ambiguous_context";
                 target_room_ids = [];
                 tool_context_room_id = None
-                print("⚠️ Scope: Ambiguous (No room specified, no current context)")
+                print(" Scope: Ambiguous (No room specified, no current context)")
         elif scope_type == "MULTI_ROOM":
             # Check if explicitly_referenced_room_id has duplicates even in MULTI_ROOM scope
             if explicitly_referenced_room_id is not None and not self.rooms_df.empty and 'room_type' in self.rooms_df.columns:
@@ -1628,7 +1618,7 @@ When data is insufficient:
                             target_room_ids = same_type_rooms['room_id'].tolist()
                             tool_context_room_id = explicitly_referenced_room_id
                             scope = f"multi_room_type_match_{len(target_room_ids)}"
-                            print(f"🔍 Scope: Multiple Rooms of Same Type (showing all {len(target_room_ids)} matching rooms)")
+                            print(f" Scope: Multiple Rooms of Same Type (showing all {len(target_room_ids)} matching rooms)")
                             print(f"   (Tool NLP Context will use Room ID: {tool_context_room_id})")
                         else:
                             # No duplicates, proceed with normal multi-room
@@ -1636,7 +1626,7 @@ When data is insufficient:
                             scope = f"multi_room_all_{room_count}"
                             target_room_ids = None
                             tool_context_room_id = explicitly_referenced_room_id if explicitly_referenced_room_id is not None else self.current_room_id
-                            print(f"🔍 Scope: Multi-Room (LLM Decision) - Providing all {room_count} room summaries.")
+                            print(f" Scope: Multi-Room (LLM Decision) - Providing all {room_count} room summaries.")
                             if tool_context_room_id:
                                 print(f"   (Tool NLP Context will use Room ID: {tool_context_room_id})")
                     else:
@@ -1645,7 +1635,7 @@ When data is insufficient:
                         scope = f"multi_room_all_{room_count}"
                         target_room_ids = None
                         tool_context_room_id = explicitly_referenced_room_id if explicitly_referenced_room_id is not None else self.current_room_id
-                        print(f"🔍 Scope: Multi-Room (LLM Decision) - Providing all {room_count} room summaries.")
+                        print(f" Scope: Multi-Room (LLM Decision) - Providing all {room_count} room summaries.")
                         if tool_context_room_id:
                             print(f"   (Tool NLP Context will use Room ID: {tool_context_room_id})")
                 else:
@@ -1654,7 +1644,7 @@ When data is insufficient:
                     scope = f"multi_room_all_{room_count}"
                     target_room_ids = None
                     tool_context_room_id = explicitly_referenced_room_id if explicitly_referenced_room_id is not None else self.current_room_id
-                    print(f"🔍 Scope: Multi-Room (LLM Decision) - Providing all {room_count} room summaries.")
+                    print(f" Scope: Multi-Room (LLM Decision) - Providing all {room_count} room summaries.")
                     if tool_context_room_id:
                         print(f"   (Tool NLP Context will use Room ID: {tool_context_room_id})")
             else:
@@ -1664,7 +1654,7 @@ When data is insufficient:
                 target_room_ids = None  # Fetch ALL rooms for main prompt
                 # Tool context uses specific ref if available, else current context
                 tool_context_room_id = explicitly_referenced_room_id if explicitly_referenced_room_id is not None else self.current_room_id
-                print(f"🔍 Scope: Multi-Room (LLM Decision) - Providing all {room_count} room summaries.")
+                print(f" Scope: Multi-Room (LLM Decision) - Providing all {room_count} room summaries.")
                 if tool_context_room_id:
                     print(f"   (Tool NLP Context will use Room ID: {tool_context_room_id})")
                 else:
@@ -1706,7 +1696,7 @@ When data is insufficient:
             
             # Auto-trigger VIS if it's a visualization request and we have a specific room context
             if is_visualization_request and not tool_used and tool_context_room_id:
-                print(f"ℹ️ Auto-triggering visualization for room ID: {tool_context_room_id}")
+                print(f" Auto-triggering visualization for room ID: {tool_context_room_id}")
                 try:
                     room_summary = self.get_room_summary(tool_context_room_id)
                     floor_num = room_summary.get('room', {}).get('floor_number')
@@ -1715,7 +1705,7 @@ When data is insufficient:
                         room_num_int = int(room_num_str)
                         room_code = f"{floor_num}-{room_num_int}"
                         
-                        print(f"🛠️ Auto-executing VIS for room {room_code}")
+                        print(f" Auto-executing VIS for room {room_code}")
                         result = self.api_wrapper.visualize_point_cloud([room_code])
                         if result:
                             desc = f"VIS (Auto-triggered for Room {tool_context_room_id}, Code: {room_code}): Status: {result.status}."
@@ -1725,11 +1715,11 @@ When data is insufficient:
                                 desc += f" Error: {result.error}"
                             tool_result_text = f"EXTERNAL API RESULT (TOOL VIS via auto-trigger):\n{desc}"
                             tool_used = "VIS"
-                            print("✅ Auto-visualization triggered successfully.")
+                            print("Success : Auto-visualization triggered successfully.")
                         else:
-                            print("⚠️ Auto-visualization failed.")
+                            print(" Auto-visualization failed.")
                 except Exception as e:
-                    print(f"⚠️ Auto-visualization error: {e}")
+                    print(f" Auto-visualization error: {e}")
 
                 # --- 4. Prepare LLM Messages ---
             prompt_data = room_data if isinstance(room_data, (dict, list)) else []
@@ -1752,27 +1742,27 @@ When data is insufficient:
                 print("🛠️ Tool result added to prompt.")
                 # Also add images for visual queries even when tools succeeded
                 if is_visual_query and can_use_visuals:
-                    print("ℹ️ Visual query detected, adding images alongside tool results...")
+                    print(" Visual query detected, adding images alongside tool results...")
                     # Use appropriate room ID based on scope
                     img_room_id = target_room_ids[0] if target_room_ids else tool_context_room_id
                     if img_room_id:
                         room_images = self._get_room_images(img_room_id)
                         if room_images:
                             images_used = True
-                            print(f"   ✅ Added {len(room_images)} images.")
+                            print(f"   Success :  Added {len(room_images)} images.")
                         else:
-                            print("   ❌ No images found.")
+                            print("    No images found.")
             elif is_visual_query and can_use_visuals:
-                print("ℹ️ Visual query, adding images...")
+                print("Visual query, adding images...")
                 # Use appropriate room ID based on scope
                 img_room_id = target_room_ids[0] if target_room_ids else tool_context_room_id
                 if img_room_id:
                     room_images = self._get_room_images(img_room_id)
                     if room_images:
                         images_used = True
-                        print(f"   ✅ Added {len(room_images)} images.")
+                        print(f"   Success :  Added {len(room_images)} images.")
                     else:
-                        print("   ❌ No images found.")
+                        print("   Error ;  No images found.")
 
             # --- 6. Finalize Message List ---
             if images_used and room_images:
@@ -1788,7 +1778,7 @@ When data is insufficient:
 
             # --- 7. API Call (Main Answer) ---
             if not self.client: return {"error": "OpenAI client not initialized.", "query": user_query}
-            print(f"💬 Sending request to LLM (Scope: {scope}, Images: {images_used})...")
+            print(f" Sending request to LLM (Scope: {scope}, Images: {images_used})...")
             output_max_tokens = 1500 if images_used else 2500
             llm_response_content = "Error: LLM call not executed."
             try:
@@ -1799,12 +1789,12 @@ When data is insufficient:
                 else:
                     llm_response_content = "Error: LLM response empty/invalid."
             except Exception as api_error:
-                print(f"❌ OpenAI API call failed: {api_error}");
+                print(f" OpenAI API call failed: {api_error}");
                 llm_response_content = f"Error: OpenAI API call failed. ({api_error})"
 
             # --- 7.5. Execute Tool Commands from LLM Response ---
             if llm_response_content and "TOOL:" in llm_response_content:
-                print("🔧 Detecting tool commands in LLM response...")
+                print(" Detecting tool commands in LLM response...")
                 # Find all TOOL: commands in the response
                 tool_pattern = r'TOOL:\s*(CLR|VOL|BBD)\s+([\d\-\s]+)'
                 tool_commands = re.findall(tool_pattern, llm_response_content, re.IGNORECASE)
@@ -1840,44 +1830,44 @@ When data is insufficient:
                                                 color_info.append(f"{color_name} RGB{rgb} ({weight*100:.1f}% coverage)")
                                         
                                         if color_info:
-                                            tool_results_section += f"\n🎨 CLR {code}: {', '.join(color_info)}"
+                                            tool_results_section += f"\n CLR {code}: {', '.join(color_info)}"
                                         else:
-                                            tool_results_section += f"\n🎨 CLR {code}: Color analysis completed (M={result.M}, components={len(result.components)})"
+                                            tool_results_section += f"\n CLR {code}: Color analysis completed (M={result.M}, components={len(result.components)})"
                                     elif result:
-                                        tool_results_section += f"\n🎨 CLR {code}: Color analysis completed (M={getattr(result, 'M', '?')}), but no RGB details"
+                                        tool_results_section += f"\n CLR {code}: Color analysis completed (M={getattr(result, 'M', '?')}), but no RGB details"
                                     else:
-                                        tool_results_section += f"\n❌ CLR {code}: Analysis failed"
+                                        tool_results_section += f"\nError : CLR {code}: Analysis failed"
                             
                             elif tool_name == "VOL":
                                 for code in codes:
                                     result = self.api_wrapper.calculate_volume(code)
                                     if result and hasattr(result, 'volume'):
                                         status = "closed" if getattr(result, 'closed', False) else "unclosed"
-                                        tool_results_section += f"\n📦 VOL {code}: Volume = {result.volume:.3f} m³ ({status})"
+                                        tool_results_section += f"\n VOL {code}: Volume = {result.volume:.3f} m³ ({status})"
                                     else:
-                                        tool_results_section += f"\n❌ VOL {code}: Calculation failed"
+                                        tool_results_section += f"\nError : VOL {code}: Calculation failed"
                             
                             elif tool_name == "BBD" and len(codes) >= 2:
                                 result = self.api_wrapper.calculate_bbox_distance(codes[0], codes[1])
                                 if result and hasattr(result, 'distance'):
-                                    tool_results_section += f"\n📏 BBD {codes[0]} ↔ {codes[1]}: Distance = {result.distance:.2f} meters"
+                                    tool_results_section += f"\n BBD {codes[0]} ↔ {codes[1]}: Distance = {result.distance:.2f} meters"
                                 else:
-                                    tool_results_section += f"\n❌ BBD {codes[0]} ↔ {codes[1]}: Calculation failed"
+                                    tool_results_section += f"\nError : BBD {codes[0]} ↔ {codes[1]}: Calculation failed"
                         
                         except Exception as e:
-                            tool_results_section += f"\n❌ {tool_name} {' '.join(codes)}: Error - {str(e)}"
-                            print(f"   ❌ Error executing {tool_name}: {e}")
+                            tool_results_section += f"\nError : {tool_name} {' '.join(codes)}: Error - {str(e)}"
+                            print(f" Error executing {tool_name}: {e}")
                     
                     tool_results_section += "\n═══════════════════════════════\n"
                     # Append tool results to the LLM response
                     llm_response_content += tool_results_section
-                    print(f"✅ Executed {len(tool_commands)} tool command(s) from LLM response")
+                    print(f" Executed {len(tool_commands)} tool command(s) from LLM response")
 
             # --- 8. Post-Response Visualization Suggestion (Conditional) ---
             # MODIFIED: Always run if interactive and VIS wasn't the main tool
             if is_interactive and tool_used != "VIS" and tool_context_room_id is not None:
                 print(
-                    f"ℹ️ Interactive mode: Attempting proactive visualization for context room {tool_context_room_id}.")
+                    f" Interactive mode: Attempting proactive visualization for context room {tool_context_room_id}.")
                 codes_for_proactive_vis = []
                 # Try to get codes from LLM response first
                 if llm_response_content:
@@ -1897,11 +1887,11 @@ When data is insufficient:
                         vis_result = self.api_wrapper.visualize_point_cloud(codes_for_proactive_vis)
                         if vis_result and vis_result.viewer_url:
                             llm_response_content += f"\n\n[VIEWER_URL]{vis_result.viewer_url}[/VIEWER_URL]"
-                            print(f"   ✅ Added proactive VIS link.")
+                            print(f"   Success :  Added proactive VIS link.")
                         else:
-                            print(f"❌ Proactive VIS call failed or returned no URL.")
+                            print(f" Proactive VIS call failed or returned no URL.")
                     except Exception as e:
-                        print(f"⚠️ Failed proactive VIS call: {e}")
+                        print(f" Failed proactive VIS call: {e}")
                 else:
                     print(f"   (Skipping proactive VIS: No codes to visualize)")
 
@@ -1917,24 +1907,30 @@ When data is insufficient:
             return result
 
         except Exception as e:
-            print(f"❌ Unhandled exception during query: '{user_query}'")
+            print(f" Unhandled exception during query: '{user_query}'")
             traceback.print_exc()
             return {"error": f"Unexpected error: {str(e)}", "query": user_query}
 
+    # =====================================================================
+    # FUTURE FEATURE: Interactive 3D Viewer Selection
+    # =====================================================================
+    # This method is planned for future implementation where users can
+    # interactively select objects in the 3D viewer and the agent will
+    # =====================================================================
     def _wait_for_user_selection(self, session_id: str, timeout: int = 60) -> Optional[List[Dict[str, Any]]]:
         """
-        等待用户在 viewer 中完成选择。
+        Wait for user to complete selection in viewer.
         
-        轮询 /tmp/viewer_selection_{session_id}.json 文件，直到：
-        - 用户完成选择（文件出现）
-        - 超时
+        Poll /tmp/viewer_selection_{session_id}.json file until:
+        - User completes selection (file appears)
+        - Timeout
         
         Args:
-            session_id: 选择会话的唯一标识符
-            timeout: 最大等待时间（秒）
+            session_id: Unique identifier for the selection session
+            timeout: Maximum wait time (seconds)
         
         Returns:
-            用户选择的物体列表，或 None（超时/出错）
+            List of user-selected objects, or None (timeout/error)
         """
         import time
         from pathlib import Path
@@ -1942,36 +1938,36 @@ When data is insufficient:
         selection_file = Path(f"/tmp/viewer_selection_{session_id}.json")
         start_time = time.time()
         
-        print(f"\n⏳ 等待用户在 viewer 中选择物体...")
+        print(f"\nWaiting for user to select objects in viewer...")
         print(f"   Session ID: {session_id}")
-        print(f"   超时设置: {timeout} 秒")
-        print(f"   监控文件: {selection_file}")
-        print(f"   (用户在 viewer 中选择后点击 'Confirm' 即可继续)\n")
+        print(f"   Timeout setting: {timeout} seconds")
+        print(f"   Monitoring file: {selection_file}")
+        print(f"   (User can continue after selecting in viewer and clicking 'Confirm')\n")
         
         elapsed = 0
         while elapsed < timeout:
             if selection_file.exists():
                 try:
-                    # 等待一小段时间确保文件写入完成
+                    # Wait a short time to ensure file write is complete
                     time.sleep(0.2)
                     
                     with open(selection_file, 'r', encoding='utf-8') as f:
                         data = json.load(f)
                     
-                    # 验证数据结构
+                    # Validate data structure
                     if not isinstance(data, list):
-                        print(f"⚠️ 选择数据格式错误: 期望 list，得到 {type(data)}")
+                        print(f"Selection data format error: expected list, got {type(data)}")
                         selection_file.unlink()
                         return None
                     
-                    # 清理临时文件
+                    # Clean up temporary file
                     try:
                         selection_file.unlink()
-                        print(f"✅ 已清理临时文件: {selection_file}")
+                        print(f"Cleaned up temporary file: {selection_file}")
                     except Exception as e:
-                        print(f"⚠️ 清理临时文件失败: {e}")
+                        print(f"Failed to clean up temporary file: {e}")
                     
-                    print(f"✅ 收到用户选择: {len(data)} 个物体")
+                    print(f"Received user selection: {len(data)} objects")
                     for i, item in enumerate(data, 1):
                         print(f"   {i}. {item.get('displayName', 'unknown')} ({item.get('itemCode', 'unknown')})")
                     print()
@@ -1979,56 +1975,56 @@ When data is insufficient:
                     return data
                     
                 except json.JSONDecodeError as e:
-                    print(f"⚠️ 解析选择文件失败: {e}")
+                    print(f"Failed to parse selection file: {e}")
                     try:
                         selection_file.unlink()
                     except:
                         pass
                     return None
                 except Exception as e:
-                    print(f"⚠️ 读取选择文件时出错: {e}")
+                    print(f"Error reading selection file: {e}")
                     traceback.print_exc()
                     return None
             
-            # 每秒显示一次进度
+            # Display progress every second
             time.sleep(1)
             elapsed = int(time.time() - start_time)
-            if elapsed % 10 == 0:  # 每10秒提示一次
-                print(f"   ... 仍在等待用户选择 ({elapsed}/{timeout}秒)...")
+            if elapsed % 10 == 0:  # prompt every 10 seconds
+                print(f"   ... still waiting for user selection ({elapsed}/{timeout} seconds)...")
         
-        print(f"\n⏱️ 等待超时 ({timeout} 秒)")
-        print(f"   提示: 用户可能没有在 viewer 中完成选择")
+        print(f"\nWait timeout ({timeout} seconds)")
+        print(f"   Hint: User may not have completed selection in viewer")
         return None
     
     def close(self):
         """Closes the database connection."""
         if self.conn:
             try:
-                self.conn.close(); self.conn = None; print("✅ Database connection closed.")
+                self.conn.close(); self.conn = None; print("Successfully closed database connection.")
             except sqlite3.Error as e:
-                print(f"⚠️ Error closing database connection: {e}")
+                print(f" Error closing database connection: {e}")
 
 
 # --- Demo Function ---
 def demo_agent():
     """Runs predefined queries (proactive links disabled)."""
-    print("🎯 STARTING SPATIAL AI AGENT DEMO MODE");
+    print(" STARTING SPATIAL AI AGENT DEMO MODE");
     print("   (Proactive VIS links disabled in demo mode)");
     print("═" * 60)
     agent = None
     try:
-        if not os.path.exists("spatial_rooms.db"): print("⚠️ DB not found."); return
+        if not os.path.exists("spatial_rooms.db"): print(" DB not found."); return
         agent = FinalSpatialAIAgent(use_images=True)
-        if agent.rooms_df.empty: print("⚠️ No rooms found in DB.")
+        if agent.rooms_df.empty: print(" No rooms found in DB.")
         if agent.current_room_id is not None and not agent.rooms_df.empty:
             row = agent.rooms_df[agent.rooms_df['room_id'] == agent.current_room_id]
             if not row.empty:
                 info = row.iloc[0]; print(
                     f"\nInitial Context: {info.get('room_name', '?')} (ID: {agent.current_room_id})")
             else:
-                print("\n⚠️ Initial room ID details not found.")
+                print("\n Initial room ID details not found.")
         else:
-            print("\nℹ️ No initial room context.")
+            print("\n No initial room context.")
         print("—" * 60)
 
         test_queries = [
@@ -2045,22 +2041,22 @@ def demo_agent():
             "which room has the highest width of the chair",  # Multi-room comparison
             "What is the distance between the chair and the door in the kitchen?",  # BBD NLP
             
-            # === NEW: ADDITIONAL SPATIAL QUERIES ===
+            # === ADDITIONAL SPATIAL QUERIES ===
             "What objects are in room 001 on floor 0?",  # List all objects
             "Show me all the doors in the hallway",  # VIS with object class
             "What is the area of the kitchen?",  # Room metadata
             "What materials and finishes can you see in the kitchen panoramas?",  # Should use images
             
-            # === NEW: COST ESTIMATION QUERIES ===
+            # === COST ESTIMATION QUERIES ===
             "What would it cost to paint the walls of the kitchen?",  # Cost estimation with area calculation
             "How much to do flooring for the entire house?",  # Cost estimation for all rooms
             
-            # === NEW: OUT OF SCOPE QUERIES (Should be rejected) ===
+            # === OUT OF SCOPE QUERIES (Should be rejected) ===
             "What is the recipe for tiramisu?",  # Cooking - OUT OF SCOPE
             "What's the weather today?",  # General knowledge - OUT OF SCOPE
             "Tell me a joke",  # Entertainment - OUT OF SCOPE
             
-            # === NEW: NON-EXISTENT DATA QUERIES (Should say doesn't exist) ===
+            # === NON-EXISTENT DATA QUERIES (Should say doesn't exist) ===
             "Show me room 999 on floor 5",  # Non-existent room
             "What color is object 9-9-9?",  # Non-existent object
             "How many windows are in the bathroom?",  # Non-existent room type
@@ -2070,24 +2066,24 @@ def demo_agent():
             if agent is None or agent.conn is None: break
             result = agent.query(query, is_interactive=False)  # Pass False
             if "error" in result:
-                print(f"❌ AGENT ERROR: {result['error']}")
+                print(f"Error : AGENT ERROR: {result['error']}")
             else:
-                print(f"📝 SCOPE: {result.get('scope', '?')}")
-                if result.get('room_id'): print(f"📍 CONTEXT: {result.get('room', '?')} (ID: {result['room_id']})")
-                print(f"🖼️ IMAGES USED: {result.get('used_images', False)}")
+                print(f" SCOPE: {result.get('scope', '?')}")
+                if result.get('room_id'): print(f" CONTEXT: {result.get('room', '?')} (ID: {result['room_id']})")
+                print(f" IMAGES USED: {result.get('used_images', False)}")
                 response_text = result.get('response', 'No response.')
                 urls_found = re.findall(r'\[VIEWER_URL\](.*?)\[/VIEWER_URL\]', response_text)
                 if urls_found:
                     response_text = re.sub(r'\[VIEWER_URL\](.*?)\[/VIEWER_URL\]', '', response_text).strip()
-                    print(f"\n📋 RESPONSE:\n{textwrap.fill(response_text, width=80)}")
+                    print(f"\n RESPONSE:\n{textwrap.fill(response_text, width=80)}")
                     for url in urls_found: print(f"\n✨ Requested Visualization Link: {url}")  # Only show requested
                     print()
                 else:
-                    print(f"\n📋 RESPONSE:\n{textwrap.fill(response_text, width=80)}\n")
+                    print(f"\n RESPONSE:\n{textwrap.fill(response_text, width=80)}\n")
     except ImportError as e:
-        print(f"\n❌ Import error: {e}"); traceback.print_exc()
+        print(f"\n Error :  Import error: {e}"); traceback.print_exc()
     except Exception as e:
-        print(f"\n❌ Demo error: {e}"); traceback.print_exc()
+        print(f"\n Error :  Demo error: {e}"); traceback.print_exc()
     finally:
         if agent: agent.close()
 
@@ -2095,12 +2091,12 @@ def demo_agent():
 # --- Interactive Session Logic ---
 def interactive_session():
     """Runs interactive session (proactive links enabled)."""
-    print("🎯 STARTING INTERACTIVE SPATIAL AI AGENT SESSION");
+    print(" STARTING INTERACTIVE SPATIAL AI AGENT SESSION");
     print("   Type 'quit' or 'exit' to end.");
     print("═" * 60)
     agent = None
     try:
-        if not os.path.exists("spatial_rooms.db"): print("❌ DB not found."); return
+        if not os.path.exists("spatial_rooms.db"): print("Error : DB not found."); return
         agent = FinalSpatialAIAgent(use_images=True)
         if agent.current_room_id is not None and not agent.rooms_df.empty:
             row = agent.rooms_df[agent.rooms_df['room_id'] == agent.current_room_id]
@@ -2108,9 +2104,9 @@ def interactive_session():
                 info = row.iloc[0]; print(
                     f"\nInitial Context: {info.get('room_name', '?')} (ID: {agent.current_room_id})")
             else:
-                print("\n⚠️ Initial room ID details not found.")
+                print("\n Initial room ID details not found.")
         else:
-            print("\nℹ️ No initial room context.")
+            print("\n No initial room context.")
         print("—" * 60)
 
         while True:
@@ -2119,48 +2115,48 @@ def interactive_session():
                 query = user_input.strip()
                 if query.lower() in ["quit", "exit"]: break
                 if not query: continue
-                if agent.conn is None: print("❌ DB connection lost."); break
+                if agent.conn is None: print("Error : DB connection lost."); break
 
                 result = agent.query(query, is_interactive=True)  # Pass True
 
                 print("\n" + "—" * 80)
                 if "error" in result:
-                    print(f"❌ AGENT ERROR: {result['error']}")
+                    print(f"Error :  AGENT ERROR: {result['error']}")
                 else:
-                    print(f"📝 SCOPE: {result.get('scope', '?')}")
-                    if result.get('room_id'): print(f"📍 CONTEXT: {result.get('room', '?')} (ID: {result['room_id']})")
-                    print(f"🖼️ IMAGES USED: {result.get('used_images', False)}")
+                    print(f" SCOPE: {result.get('scope', '?')}")
+                    if result.get('room_id'): print(f" CONTEXT: {result.get('room', '?')} (ID: {result['room_id']})")
+                    print(f" IMAGES USED: {result.get('used_images', False)}")
                     response_text = result.get('response', 'No response.')
                     urls_found = re.findall(r'\[VIEWER_URL\](.*?)\[/VIEWER_URL\]', response_text)
                     if urls_found:
                         response_text = re.sub(r'\[VIEWER_URL\](.*?)\[/VIEWER_URL\]', '', response_text).strip()
-                        print(f"\n📋 RESPONSE:\n{textwrap.fill(response_text, width=80)}")
+                        print(f"\n RESPONSE:\n{textwrap.fill(response_text, width=80)}")
                         for j, url in enumerate(urls_found):
                             is_proactive = (j == len(urls_found) - 1) and (result.get('tool_used') != "VIS")
                             link_type = "Suggested" if is_proactive else "Requested"
-                            print(f"\n✨ {link_type} Visualization Link: {url}")
+                            print(f"\n {link_type} Visualization Link: {url}")
                         print()
                     else:
-                        print(f"\n📋 RESPONSE:\n{textwrap.fill(response_text, width=80)}")
+                        print(f"\n RESPONSE:\n{textwrap.fill(response_text, width=80)}")
                 print("—" * 80 + "\n")
             except (EOFError, KeyboardInterrupt):
                 break
             except Exception as loop_error:
-                print(f"\n❌ Query error: {loop_error}"); traceback.print_exc()
+                print(f"\nError :  Query error: {loop_error}"); traceback.print_exc()
     except ImportError as e:
-        print(f"\n❌ Import error: {e}"); traceback.print_exc()
+        print(f"\nError :  Import error: {e}"); traceback.print_exc()
     except Exception as e:
-        print(f"\n❌ Session setup error: {e}"); traceback.print_exc()
+        print(f"\nError :  Session setup error: {e}"); traceback.print_exc()
     finally:
         if agent: agent.close()
-        print("👋 Session ended.")
+        print(" Session ended.")
 
 
 # --- Main Execution Block ---
 if __name__ == "__main__":
     if not os.path.exists("spatial_rooms.db"):
         print("---");
-        print("⚠️ DB 'spatial_rooms.db' not found.");
+        print("Error :  DB 'spatial_rooms.db' not found.");
         print("   Run 'room_database.py' first.");
         print("---")
     else:

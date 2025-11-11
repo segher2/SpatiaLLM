@@ -1,0 +1,33 @@
+# Python Dependencies for LLM-based Spatial AI Agent
+# This requirements.txt covers ALL 4 Python files in this component
+
+# Core LLM and API
+openai>=1.0.0              # Required by: mutli_room_agent2.py, enrich_room_types.py
+python-dotenv>=0.21.0      # Required by: mutli_room_agent2.py, enrich_room_types.py
+
+# Data Processing
+pandas>=1.5.0              # Required by: mutli_room_agent2.py, room_database.py
+pillow>=9.0.0              # Required by: mutli_room_agent2.py, enrich_room_types.py
+
+# API Validation
+pydantic>=2.0.0            # Required by: ai_api_wrapper.py
+
+# Built-in Modules (No Installation Required)
+# These are part of Python standard library:
+# - sqlite3         : Used by mutli_room_agent2.py, room_database.py, enrich_room_types.py
+# - subprocess      : Used by mutli_room_agent2.py, ai_api_wrapper.py
+# - json            : Used by mutli_room_agent2.py, ai_api_wrapper.py
+# - re              : Used by mutli_room_agent2.py, enrich_room_types.py
+# - base64          : Used by mutli_room_agent2.py, enrich_room_types.py
+# - io              : Used by mutli_room_agent2.py, enrich_room_types.py
+# - os, glob        : Used by all 4 files
+# - traceback       : Used by mutli_room_agent2.py, ai_api_wrapper.py, enrich_room_types.py
+# - typing          : Used by all 4 files (Dict, List, Optional, etc.)
+# - time            : Used by enrich_room_types.py
+# - textwrap        : Used by mutli_room_agent2.py
+
+# Installation:
+#   pip install -r requirements.txt
+#
+# Or install individually:
+#   pip install openai pandas pillow pydantic python-dotenv

@@ -21,7 +21,6 @@ class SpatialDatabaseCorrect:
     def _create_tables(self):
         """
         Create database tables.
-        CRITICAL FIX: Explicitly dropping tables to ensure the new 'object_code'
         column is created before the index is created.
         """
         print(" Ensuring clean schema by dropping old tables...")
@@ -111,7 +110,7 @@ class SpatialDatabaseCorrect:
         """)
 
         # Indexes for performance
-        # CRITICAL FIX: The table must exist with the columns before indexing.
+        # The table must exist with the columns before indexing.
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_rooms_floor ON rooms(floor_id)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_objects_room ON objects(room_id)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_objects_class ON objects(class)")
@@ -123,15 +122,15 @@ class SpatialDatabaseCorrect:
 
     def scan_from_manifest(self, data_path: str = "Data") -> Dict:
         """
-        NEW: Scan data directory based on rooms_manifest.csv files.
+        Scan data directory based on rooms_manifest.csv files.
         This method reads all rooms_manifest.csv files under floor_* directories
         and uses them as the source of truth for room information.
         """
-        print(f"🔍 Scanning data directory based on rooms_manifest.csv: {data_path}")
+        print(f"Scanning data directory based on rooms_manifest.csv: {data_path}")
 
         structure = {}
         if not os.path.exists(data_path):
-            print(f"❌ Data directory not found: {data_path}")
+            print(f"Error : Data directory not found: {data_path}")
             return structure
 
         # Find all floor directories
@@ -146,10 +145,10 @@ class SpatialDatabaseCorrect:
             manifest_path = os.path.join(floor_dir, "rooms_manifest.csv")
             
             if not os.path.exists(manifest_path):
-                print(f"⚠️  No rooms_manifest.csv found in {floor_name}, skipping...")
+                print(f" No rooms_manifest.csv found in {floor_name}, skipping...")
                 continue
 
-            print(f"  📄 Reading manifest: {manifest_path}")
+            print(f" Reading manifest: {manifest_path}")
             
             structure[floor_name] = {'path': floor_dir, 'floor_number': floor_number, 'rooms': {}}
 
@@ -166,7 +165,7 @@ class SpatialDatabaseCorrect:
                     room_id_from_manifest = int(row['room_id']) if 'room_id' in row else None
                     
                     if room_id_from_manifest is None:
-                        print(f"     ⚠️  Skipping row without room_id")
+                        print(f"  Skipping row without room_id")
                         continue
                     
                     # Generate room_name and room_number from manifest room_id
@@ -228,23 +227,23 @@ class SpatialDatabaseCorrect:
                     print(f"     ✓ {room_name} (room_id={room_id_from_manifest}, type={room_type}, images={len(image_files)})")
 
             except Exception as e:
-                print(f"     ❌ Error reading manifest for {floor_name}: {e}")
+                print(f" Error  :   reading manifest for {floor_name}: {e}")
                 continue
 
         return structure
     
     def scan_data_directory(self, data_path: str = "Data") -> Dict:
         """
-        DEPRECATED: Old method that scans directories directly.
+        DEPRECATED: method that scans directories directly.
         Use scan_from_manifest() instead for manifest-based scanning.
         """
-        print(f"⚠️  WARNING: Using deprecated directory scanning method.")
+        print(f"   WARNING: Using deprecated directory scanning method.")
         print(f"   Consider using scan_from_manifest() for manifest-based scanning.")
-        print(f"🔍 Scanning data directory: {data_path}")
+        print(f"  Scanning data directory: {data_path}")
 
         structure = {}
         if not os.path.exists(data_path):
-            print(f"❌ Data directory not found: {data_path}")
+            print(f" Data directory not found: {data_path}")
             return structure
 
         # Find all floor directories
@@ -294,7 +293,7 @@ class SpatialDatabaseCorrect:
         return structure
 
     def add_floor(self, floor_name: str, floor_number: int = None) -> int:
-        """Add a new floor (Unchanged)"""
+        """Add a new floor to the database"""
         if floor_number is None:
             try:
                 floor_number = int(floor_name.split('_')[1])
@@ -345,7 +344,7 @@ class SpatialDatabaseCorrect:
             required_cols = ['object_code', 'cluster_id', 'file', 'center_x', 'size_x', 'size_y', 'size_z']
             for col in required_cols:
                 if col not in df.columns:
-                    print(f"❌ ERROR: Missing CRITICAL column '{col}' in Object CSV. Cannot import objects.")
+                    print(f" ERROR: Missing CRITICAL column '{col}' in Object CSV. Cannot import objects.")
                     return 0
             # ----------------------
 
@@ -382,12 +381,12 @@ class SpatialDatabaseCorrect:
             return count
 
         except Exception as e:
-            print(f"❌ Error importing OBJECT CSV: {e}")
+            print(f" Error importing OBJECT CSV: {e}")
             return 0
 
     def import_planes_csv(self, room_id: int, csv_path: str) -> int:
         """
-        NEW: Import geometric plane data from planes_data.csv.
+        Import geometric plane data from planes_data.csv.
         FIX: Updated column mapping to use 'group_name' and 'class' from CSV.
         ENHANCEMENT: Calculate and update room floor area from floor planes.
         """
@@ -407,7 +406,7 @@ class SpatialDatabaseCorrect:
 
             for col in required_cols:
                 if col not in df.columns:
-                    print(f"❌ ERROR: Missing CRITICAL column '{col}' in planes_data.csv. Skipping import.")
+                    print(f" ERROR: Missing CRITICAL column '{col}' in planes_data.csv. Skipping import.")
                     return 0
 
             count = 0
@@ -445,15 +444,15 @@ class SpatialDatabaseCorrect:
                 """, (total_floor_area, room_id))
                 self.conn.commit()
                 print(f"✓ Imported {count} planes from {os.path.basename(csv_path)}")
-                print(f"   📐 Calculated floor area: {total_floor_area:.2f}m²")
+                print(f"   Calculated floor area: {total_floor_area:.2f}m²")
             else:
                 print(f"✓ Imported {count} planes from {os.path.basename(csv_path)}")
-                print(f"   ⚠️  No floor planes found, area remains 0")
+                print(f"   ` No floor planes found, area remains 0")
             
             return count
 
         except Exception as e:
-            print(f"❌ Error importing PLANES CSV: {e}")
+            print(f" Error :  importing PLANES CSV: {e}")
             return 0
 
     def add_room_images(self, room_id: int, image_paths: List[str]) -> int:
@@ -495,7 +494,7 @@ class SpatialDatabaseCorrect:
             floor_id = self.add_floor(floor_name, floor_data['floor_number'])
 
             for room_name, room_data in floor_data['rooms'].items():
-                print(f"  🏠 Processing {room_name}...")
+                print(f"   Processing {room_name}...")
 
                 # Optional: Skip rooms without images (configurable)
                 if require_images and not room_data['images']:
@@ -521,27 +520,27 @@ class SpatialDatabaseCorrect:
                     obj_count = self.import_geometric_csv(room_id, room_data['obj_csv_path'])
                     total_objects += obj_count
                 else:
-                    print(f"    ℹ️  No Object CSV file found for {room_name}")
+                    print(f"    No Object CSV file found for {room_name}")
 
                 # 2. Import planes data
                 if room_data['has_plane_csv']:
                     plane_count = self.import_planes_csv(room_id, room_data['plane_csv_path'])
                     total_planes += plane_count
                 else:
-                    print(f"    ℹ️  No Planes CSV file found for {room_name}")
+                    print(f"    No Planes CSV file found for {room_name}")
 
                 # 3. Add images
                 if room_data['images']:
                     img_count = self.add_room_images(room_id, room_data['images'])
                     total_images += img_count
                 else:
-                    print(f"    ℹ️  No images found for {room_name}")
+                    print(f"    No images found for {room_name}")
 
                 total_rooms += 1
 
         self._update_floor_statistics()
 
-        print(f"\n✅ Database populated successfully!")
+        print(f"\n Database populated successfully!")
         print(f"   Floors: {len(structure)}")
         print(f"   Rooms: {total_rooms}")
         if skipped_rooms > 0:
@@ -672,7 +671,7 @@ def populate_database_fixed():
     DEPRECATED: Old method using directory scanning.
     Use populate_database_from_manifest() instead.
     """
-    print("⚠️  WARNING: This method is deprecated.")
+    print(" WARNING: This method is deprecated.")
     print("   Use populate_database_from_manifest() for manifest-based database generation.")
     print()
 
@@ -681,7 +680,7 @@ def populate_database_fixed():
     DATA_ROOT = os.path.join(script_dir, "..", "data", "output")
     
     if not os.path.exists(DATA_ROOT):
-        print(f"❌ Data directory not found: {DATA_ROOT}")
+        print(f" Data directory not found: {DATA_ROOT}")
         return
     
     print(f" POPULATING DATABASE WITH UPDATED SCHEMA (Root: {DATA_ROOT})")
@@ -695,7 +694,7 @@ def populate_database_fixed():
     structure = db.scan_data_directory(DATA_ROOT)
 
     if not structure:
-        print(f"❌ No floor structure found under {DATA_ROOT}. Please check folder structure.")
+        print(f" No floor structure found under {DATA_ROOT}. Please check folder structure.")
         db.close()
         return
 
@@ -718,7 +717,7 @@ def populate_database_fixed():
     print(db.get_database_overview())
 
     db.close()
-    print(f"\n✅ Database created: spatial_rooms.db")
+    print(f"\n Database created: spatial_rooms.db")
 
 
 def populate_database_from_manifest():
@@ -732,7 +731,7 @@ def populate_database_from_manifest():
     
     # Verify the path exists
     if not os.path.exists(DATA_ROOT):
-        print(f"❌ Data directory not found: {DATA_ROOT}")
+        print(f" Data directory not found: {DATA_ROOT}")
         print(f"   Script location: {script_dir}")
         print(f"   Current working directory: {os.getcwd()}")
         return
@@ -748,11 +747,11 @@ def populate_database_from_manifest():
     structure = db.scan_from_manifest(DATA_ROOT)
 
     if not structure:
-        print(f"❌ No manifest files found under {DATA_ROOT}. Please check folder structure.")
+        print(f" No manifest files found under {DATA_ROOT}. Please check folder structure.")
         db.close()
         return
 
-    print(f"\n📊 Discovered structure from manifests:")
+    print(f"\n Discovered structure from manifests:")
     for floor_name, floor_data in structure.items():
         print(f"  {floor_name}: {len(floor_data['rooms'])} rooms")
         for room_name, room_data in floor_data['rooms'].items():
@@ -773,7 +772,7 @@ def populate_database_from_manifest():
     print(db.get_database_overview())
 
     db.close()
-    print(f"\n✅ Database created: spatial_rooms.db")
+    print(f"\n Database created: spatial_rooms.db")
     print(f"   Source: rooms_manifest.csv files in floor_* directories")
 
 
