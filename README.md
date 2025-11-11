@@ -158,8 +158,8 @@ mkdir -p data/input
 cp /path/to/scan.e57 data/input/
 cp /path/to/scan_segmented.las data/input/
 
-# 2. Run Snakemake pipeline
-snakemake --cores all --configfile config.yaml
+# 2. Run Snakemake pipeline, specify number of cores
+snakemake --cores 6 all
 
 # Output: data/output/_PCG_DONE marker indicates completion
 ```
