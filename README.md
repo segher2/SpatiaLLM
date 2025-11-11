@@ -97,14 +97,11 @@ streamlit run GUI_streamlit.py  # Terminal 2
 
 ### Installation
 
-#### 1. Clone with Submodules
+#### 1. Clone 
 
 ```bash
-git clone --recurse-submodules https://github.com/segher2/SpatialLLM.git
+git clone https://github.com/segher2/SpatialLLM.git
 cd SpatialLLM
-
-# If already cloned without submodules:
-git submodule update --init --recursive
 ```
 
 #### 2. Set up Python Environment
