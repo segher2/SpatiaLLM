@@ -89,200 +89,50 @@ Then generate the database:
 python room_database.py
 ```
 
-**Expected output:**
-```
-📋 POPULATING DATABASE FROM ROOMS_MANIFEST.CSV
-✓ Old tables dropped.
-✓ Database tables created for new workflow
- Reading manifest: ../data/output/floor_0/rooms_manifest.csv
-     Found 8 rooms in manifest
-✓ Imported 45 objects from room_001.csv
-✓ Imported 12 planes from planes_data.csv
-✓ Added 3 panorama images
- Database populated successfully!
-   Floors: 2
-   Rooms: 16
-   Objects: 234
-   Planes: 96
-   Images: 48
-```
-
 ---
 
-## Running the System for Presentation
+## Usage
 
-### RECOMMENDED: Demo Mode
+### Running the System
 
-This is the best way to showcase the system during your presentation!
+#### Demo Mode
+Execute the main agent with predefined test queries:
 
 ```bash
 cd LM2PCG
 python mutli_room_agent2.py
 ```
 
-**What Happens:**
-- Initializes the AI agent and database
-- Prints database summary table
-- Runs 21 predefined test queries automatically
-- Showcases ALL features in 2-3 minutes
-- No manual input needed - perfect for presentations
+This runs 21 test queries demonstrating all system capabilities:
+- Color analysis of specific objects
+- Distance calculations between objects
+- Multi-room comparisons
+- Room information queries
+- Floor-level statistics
+- Object counting and filtering
+- Cost estimation queries
+- Visualization requests
+- Out-of-scope query rejection
 
-**Sample Demo Output:**
-
-```
-═══════════════════════════════════════════════════════════
- DATABASE SUMMARY
-═══════════════════════════════════════════════════════════
-Floor 0 (8 rooms, 125 objects, 42 planes, 24 images)
-  └─ room_001 (Kitchen)       : 18 objects, 6 planes
-  └─ room_002 (Living Room)   : 22 objects, 6 planes
-  └─ room_003 (Bedroom)       : 15 objects, 6 planes
-  ...
-
-Floor 1 (8 rooms, 109 objects, 54 planes, 24 images)
-  └─ room_001 (Office)        : 12 objects, 6 planes
-  ...
-═══════════════════════════════════════════════════════════
-
-🤖 RUNNING DEMO MODE (21 TEST QUERIES)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Query 1/21: What color is object 0-2-3?
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🔧 Executing Tool: CLR 0-2-3
-✓ API Result: CLR (0-2-3): Found 2 colors: 
-  [W: 0.70, RGB: (180, 195, 185)], [W: 0.30, RGB: (95, 110, 100)]
-
-🤖 LLM Response:
-Object 0-2-3 (door_2) displays two dominant colors:
-- Light mint green (70% coverage) - RGB: (180, 195, 185)
-- Darker forest green (30%) - RGB: (95, 110, 100)
-
-This suggests a two-tone painted surface with lighter tones 
-being more prominent.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Query 2/21: How far apart are objects 0-2-1 and 0-2-5?
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🔧 Executing Tool: BBD 0-2-1 0-2-5
-✓ API Result: Distance = 2.35 meters
-
-🤖 LLM Response:
-The distance between object 0-2-1 (chair) and object 0-2-5 
-(table) is approximately 2.35 meters (7.7 feet).
-...
-
-[21 queries complete in ~120 seconds]
-```
-
-**Test Queries Covered:**
-1. Color analysis of specific objects
-2. Distance calculations between objects
-3. Multi-room comparisons
-4. Room information queries
-5. Floor-level statistics
-6. Object counting and filtering
-7. Cost estimation queries
-8. Visualization requests
-9. Out-of-scope query rejection
-
----
-
-### Alternative: Interactive Mode
-
-For live Q&A during presentation (if time permits):
+#### Interactive Mode
+Launch an interactive session for custom queries:
 
 ```bash
 cd LM2PCG
 python -c "from mutli_room_agent2 import interactive_session; interactive_session()"
 ```
 
-**Example Interaction:**
-```
-═════════════════════════════════════════════════════════════
- STARTING INTERACTIVE SPATIAL AI AGENT SESSION
-   Type 'quit' or 'exit' to end.
-═════════════════════════════════════════════════════════════
-
-> What color is the door in room 0-2?
-
-🔧 Executing Tool: CLR 0-2-3
-✓ Result: Light mint green with darker green accents
-
-🤖 Response: The door in room 0-2 is painted in a two-tone 
-green color scheme. The primary color is a light mint green...
-
-> How many bedrooms are in the building?
-
-🤖 Response: There are 3 bedrooms in the building:
-- Floor 0: room_003 (Bedroom)
-- Floor 1: room_005 (Bedroom), room_006 (Bedroom)
-
-> quit
-Goodbye!
-```
+Example queries:
+- "What color is the door in the kitchen?"
+- "How many bedrooms are in the building?"
+- "What is the distance between the chair and the table?"
+- "Show me room 0-2"
 
 ---
 
-## Presentation Script (10 minutes)
+## System Architecture
 
-### Part 1: Introduction (2 min)
-
-**Show the slide/screen:**
-```
-"SpatiaLLM: AI-Powered Spatial Intelligence"
-My Component: LLM-based Multi-Room Agent
-```
-
-**Say:**
-> "I developed the AI agent that allows users to query building information 
-> using natural language. The system combines GPT-4o-mini with a custom 
-> SQLite database containing geometric and visual data from point clouds."
-
-**Run the demo:**
-```bash
-python mutli_room_agent2.py
-```
-
-**Point out the database summary table that appears:**
-> "Here you can see our database contains 2 floors, 16 rooms, 234 objects, 
-> and 48 panoramic images. The system automatically populates this from 
-> point cloud data."
-
----
-
-### Part 2: Feature Showcase (5 min)
-
-**Let the demo run and highlight these queries as they execute:**
-
-**1. Color Analysis (Query 1):**
-> "Watch how the system analyzes the dominant color of an object. It calls 
-> our C++ tool, gets RGB values, and the LLM interprets them into human-
-> readable color names like 'light mint green'."
-
-**2. Distance Measurement (Query 2):**
-> "Here it calculates the distance between two objects - useful for space 
-> planning and accessibility analysis."
-
-**3. Multi-Room Intelligence (Query 5):**
-> "This demonstrates the smart query scoping. The system automatically 
-> detects this is a multi-room query and compares data across rooms."
-
-**4. Cost Estimation (Query 7):**
-> "The LLM uses room dimensions and object counts to estimate renovation 
-> costs - showcasing the system's practical applications."
-
-**5. Out-of-Scope Handling (Query 21):**
-> "Notice how it politely rejects queries outside its knowledge domain, 
-> like predicting future events. This prevents hallucinations."
-
----
-
-### Part 3: Architecture Deep-Dive (2 min)
-
-**Show architecture diagram (or explain):**
+### Query Processing Pipeline
 
 ```
 User Query: "What color is the kitchen table?"
@@ -304,7 +154,7 @@ User Query: "What color is the kitchen table?"
    - Response: "The kitchen table is primarily warm beige..."
 ```
 
-**Key Points to Mention:**
+### Key Design Principles
 - Two-stage LLM workflow (scope → answer)
 - Hybrid approach: LLM reasoning + precise computational tools
 - Object code system: `floor-room-object` (e.g., `0-1-5`)
@@ -312,32 +162,31 @@ User Query: "What color is the kitchen table?"
 
 ---
 
-### Part 4: Vision Integration (1 min)
+## Vision-Based Room Classification
 
-**Show room classification:**
+The system includes automated room type classification using GPT-4 Vision:
+
 ```bash
 python enrich_room_types.py
 ```
 
-**Say:**
-> "This script uses GPT-4 Vision to automatically classify room types from 
-> panoramic images. It finds rooms labeled 'unknown', sends their photos to 
-> the vision model, and updates the database with classifications like 
-> 'kitchen', 'bedroom', 'bathroom', etc."
+This script:
+- Scans database for rooms with unknown or generic types
+- Sends panoramic images to GPT-4 Vision API
+- Classifies rooms into categories (kitchen, bedroom, bathroom, etc.)
+- Updates database with inferred room types
 
-**Expected output:**
+**Expected Output:**
 ```
-📸 PROCESSING ROOM 0-4 (unknown type)
-   → Analyzing panoramic image...
-   → GPT-4 Vision classification: kitchen
-✓  Updated database: room 0-4 → kitchen
+Processing room 0-4 (unknown type)
+  → Analyzing panoramic image...
+  → GPT-4 Vision classification: kitchen
+✓ Updated database: room 0-4 → kitchen
 
 [Processed 3 rooms, updated 2 with new types]
 ```
 
----
-
-## Technical Achievements
+--- Technical Achievements
 
 ### Code Metrics
 - **Total Lines:** 3,235 lines of Python
@@ -366,7 +215,7 @@ Floors (floor_id, floor_name, floor_number, total_rooms, total_area)
 
 ---
 
-## Quick Tests (If Demo Fails)
+## Quick Tests
 
 ### Validate Components
 ```bash
@@ -418,26 +267,30 @@ pip install -r requirements.txt
 
 ---
 
-## Learning Outcomes
+## Component Summary
 
-### Technical Skills Developed
-1. **LLM Engineering**: Prompt design, context management, two-stage workflows
-2. **Database Design**: SQLite schema design, indexing, query optimization
-3. **System Integration**: Python ↔ C++ interop, subprocess management
-4. **Multi-Modal AI**: Combining vision models with geometric processing
-5. **API Design**: Clean abstractions, error handling, Pydantic validation
-6. **Production Code**: Documentation, testing, code quality standards
+This LLM-based spatial intelligence system provides:
 
-### Challenges Overcome
-1. **Context Window Management**: Implemented smart data filtering to fit LLM context limits
-2. **Tool Orchestration**: Designed reliable subprocess communication with timeouts
-3. **Query Parsing**: Built robust NLP-based room/object reference extraction
-4. **Color Interpretation**: Developed RGB → human-readable color name mapping
-5. **Multi-Room Reasoning**: Created scope classifier to handle queries spanning multiple rooms
+**Deliverables:**
+1. **FinalSpatialAIAgent** (2,166 lines) - Main AI agent with natural language processing
+2. **SpatialDatabaseCorrect** (607 lines) - Database schema and population pipeline
+3. **AiApiWrapper** (241 lines) - Python interface to C++ computational tools
+4. **Room Type Enrichment** (221 lines) - Automated vision-based room classification
+5. **Comprehensive Documentation** - Technical documentation and setup guides
+
+**Impact:**
+- Enables non-technical users to query complex 3D building data using natural language
+- Reduces query time from manual CSV inspection (5-10 minutes) to instant responses (<5 seconds)
+- Provides intelligent interpretation of raw geometric data
+- Demonstrates practical AI application in architecture and construction domains
 
 ---
 
-## Dependencies Explained
+**Last Updated:** November 11, 2025  
+**Version:** 1.0 (Production-Ready)
+
+
+## Dependencies
 
 ### Core Libraries
 ```python
@@ -448,7 +301,7 @@ pydantic>=2.0.0        # API response validation and schemas
 python-dotenv>=0.21.0  # Environment variable management
 ```
 
-### Built-in Modules (No Installation Needed)
+### Built-in Modules
 ```python
 sqlite3      # Database operations
 subprocess   # C++ tool execution
@@ -458,51 +311,3 @@ base64       # Image encoding for vision API
 os, glob     # File system operations
 ```
 
----
-
-## My Contribution Summary
-
-**Role:** LLM Integration & Spatial Intelligence System
-
-**Deliverables:**
-1. FinalSpatialAIAgent (2,166 lines) - Main AI agent with natural language processing
-2. SpatialDatabaseCorrect (607 lines) - Database schema and population pipeline
-3. AiApiWrapper (241 lines) - Python interface to C++ tools
-4. Room Type Enrichment (221 lines) - Automated vision-based classification
-5. Comprehensive Documentation - README, code comments, presentation guide
-
-**Impact:**
-- Enables non-technical users to query complex 3D building data
-- Reduces query time from manual CSV inspection (5-10 min) to instant (<5 sec)
-- Provides intelligent interpretation of raw geometric data
-- Demonstrates practical AI application in architecture/construction domains
-
----
-
-## Presentation Tips
-
-### Before Presentation
-1. Run `python room_database.py` to ensure fresh database
-2. Test demo mode once: `python mutli_room_agent2.py`
-3. Have `.env` file ready with valid API keys
-4. Close unnecessary applications for smooth demo
-5. Prepare backup: screenshots of demo output
-
-### During Presentation
-1. Start with demo mode - it's foolproof and impressive
-2. Let queries 1, 2, 5, 7, and 21 run - they showcase best features
-3. Explain the 2-stage architecture while demo runs
-4. Highlight multi-modal reasoning (geometric + visual)
-5. Show the database summary table at the start
-
-### If Demo Fails
-1. Show pre-recorded demo video/screenshots
-2. Walk through code structure and architecture diagrams
-3. Present metrics: 3,235 lines, 5 tools, 21 test queries
-4. Explain the technical challenges overcome
-
----
-
-**Last Updated:** November 11, 2025  
-**Version:** 1.0 (Production-Ready for Presentation)  
-**Author:** Neelabh Singh
