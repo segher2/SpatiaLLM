@@ -5,6 +5,8 @@ from pathlib import Path
 import numpy as np
 import base64
 import sys
+from SAM23D.sam2_predictor import run_sam2_prediction
+import SAM23D.select_points_in_mask as select_points_in_mask
 
 app = Flask(__name__)
 CORS(app)
@@ -13,7 +15,7 @@ CORS(app)
 BASE_DIR = Path(__file__).resolve().parent
 MAX_CLICKS = 5
 
-# Add SAM23D to Python path (for sam2_predictor and select_points_in_mask)
+# Add SAM23D to Python path (for sam2_predictor)
 SAM23D_DIR = BASE_DIR.parent / "SAM23D"
 if str(SAM23D_DIR) not in sys.path:
     sys.path.insert(0, str(SAM23D_DIR))
@@ -268,7 +270,6 @@ def handle_click():
     if len(click_data["points"]) == MAX_CLICKS:
         print("Five points reached - running SAM2 predictor...")
         try:
-            from sam2_predictor import run_sam2_prediction
             # Pass the full image path from ../data/input/panoramas/images
             full_image_path = BASE_DIR.parent / "data" / "input" / "panoramas" / "images" / click_data["image_title"]
             result = run_sam2_prediction(click_data["points"], str(full_image_path))
@@ -289,7 +290,6 @@ def handle_click():
                         print(f"Overlay encoded: {len(overlay_base64)} chars")
 
             print("Starting point cloud filtering...")
-            from select_points_in_mask import filter_point_cloud_with_mask
             image_stem = Path(click_data["image_title"]).stem
             
             # Enable clustering refinement
@@ -302,7 +302,7 @@ def handle_click():
                 'min_pts_total': 100
             }
             
-            las_path = filter_point_cloud_with_mask(
+            las_path = select_points_in_mask.filter_point_cloud_with_mask(
                 result["mask_path"],
                 image_stem,
                 BASE_DIR,
@@ -432,7 +432,6 @@ def run_sam2():
     """Manual SAM2 trigger endpoint"""
     print("Manual SAM2 trigger received")
     try:
-        from sam2_predictor import run_sam2_prediction
         result = run_sam2_prediction(click_data["points"], click_data["image_title"])
 
         # Encode overlay to base64
@@ -449,7 +448,6 @@ def run_sam2():
 
         if result.get("success"):
             print("Starting point cloud filtering...")
-            from select_points_in_mask import filter_point_cloud_with_mask
             image_stem = Path(click_data["image_title"]).stem
             
             # Enable clustering refinement
@@ -462,7 +460,7 @@ def run_sam2():
                 'min_pts_total': 100
             }
             
-            las_path = filter_point_cloud_with_mask(
+            las_path = select_points_in_mask.filter_point_cloud_with_mask(
                 result["mask_path"],
                 image_stem,
                 BASE_DIR,
