@@ -11,8 +11,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from PIL import Image
 from dotenv import load_dotenv
-
-import LM2PCG.mutli_room_agent2 as room_agent
+import LM2PCG.multi_room_agent2 as room_agent
 
 # Load environment variables from .env file
 # .env is located in LM2PCG/data/configs/

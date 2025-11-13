@@ -119,7 +119,7 @@ All notable changes to this project are documented here. This log mirrors the st
 ### Added Features
 
 #### Agent Capabilities
-- **Interactive Selection Workflow** (`mutli_room_agent2.py`)
+- **Interactive Selection Workflow** (`multi_room_agent2.py`)
   - New `_wait_for_user_selection()` method
   - Polls for user selections with configurable timeout (default 60s)
   - Progress indicators every 10 seconds
@@ -171,7 +171,7 @@ All notable changes to this project are documented here. This log mirrors the st
 
 #### Statistics
 - **Code Changes**:
-  - `mutli_room_agent2.py`: +438 lines (major prompt enhancement)
+  - `multi_room_agent2.py`: +438 lines (major prompt enhancement)
   - `room_database.py`: +217 lines (schema updates and migrations)
   - `enrich_room_types.py`: +27 lines (vision classification)
   - `scripts/api_server.py`: +33 lines (selection endpoint)
