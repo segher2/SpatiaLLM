@@ -4,7 +4,7 @@
 
 A comprehensive framework for spatial understanding combining point cloud processing, 3D segmentation, and natural language interfaces. This project integrates indoor scene reconstruction, interactive 3D visualization, and AI-powered spatial reasoning.
 
-> **🚀 Quick Start:** Check out the [**GUI Setup Guide**](./GUI_SETUP_GUIDE.md) for step-by-step instructions to launch the interactive GUI.
+> **🚀 Quick Start:** Check out the [**GUI Setup Guide**](GUI_SpatialLLM/GUI_SETUP_GUIDE.md) for step-by-step instructions to launch the interactive GUI.
 
 ## 🌟 Overview
 
@@ -78,7 +78,7 @@ python bridge_server_final.py  # Terminal 1
 streamlit run GUI_streamlit.py  # Terminal 2
 ```
 
-[📖 Full GUI Documentation](./GUI_SpatialLLM/README.md)
+[📖 Full GUI Documentation](./README.md)
 
 ## 🚀 Complete Pipeline Setup
 
@@ -97,11 +97,14 @@ streamlit run GUI_streamlit.py  # Terminal 2
 
 ### Installation
 
-#### 1. Clone 
+#### 1. Clone with Submodules
 
 ```bash
-git clone https://github.com/segher2/SpatialLLM.git
+git clone --recurse-submodules https://github.com/segher2/SpatialLLM.git
 cd SpatialLLM
+
+# If already cloned without submodules:
+git submodule update --init --recursive
 ```
 
 #### 2. Set up Python Environment
@@ -155,8 +158,8 @@ mkdir -p data/input
 cp /path/to/scan.e57 data/input/
 cp /path/to/scan_segmented.las data/input/
 
-# 2. Run Snakemake pipeline, specify number of cores
-snakemake --cores 6 all
+# 2. Run Snakemake pipeline
+snakemake --cores all --configfile config.yaml
 
 # Output: data/output/_PCG_DONE marker indicates completion
 ```
@@ -272,7 +275,7 @@ Download `sam2.1_hiera_large.pt` to `SAM23D/SAM2/checkpoints/`
 
 - [LM2PCG Documentation](./LM2PCG/README.md) - Point cloud processing
 - [SAM23D Documentation](./SAM23D/README.md) - 2D-3D segmentation
-- [GUI Documentation](./GUI_SpatialLLM/README.md) - Interactive interface
+- [GUI Documentation](./README.md) - Interactive interface
 - [AI API Guide](./LM2PCG/docs/AI_API.md) - API reference
 - [Web Viewer Guide](./LM2PCG/docs/POINTCLOUD_VIEWER.md) - 3D visualization
 
