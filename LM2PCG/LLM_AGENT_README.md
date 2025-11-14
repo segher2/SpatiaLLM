@@ -19,7 +19,7 @@ This is the **LLM-based Multi-Room Agent** component of the SpatiaLLM project - 
 
 ```
 LM2PCG/
-├── mutli_room_agent2.py      # Main AI agent with LLM query processing (2,166 lines)
+├── multi_room_agent2.py      # Main AI agent with LLM query processing (2,166 lines)
 ├── room_database.py           # SQLite database management (607 lines)
 ├── ai_api_wrapper.py          # Python wrapper for C++ tools (241 lines)
 ├── enrich_room_types.py       # Vision-based room classification (221 lines)
@@ -100,7 +100,7 @@ Execute the main agent with predefined test queries:
 
 ```bash
 cd LM2PCG
-python mutli_room_agent2.py
+python multi_room_agent2.py
 ```
 
 This runs 21 test queries demonstrating all system capabilities:
@@ -119,7 +119,7 @@ Launch an interactive session for custom queries:
 
 ```bash
 cd LM2PCG
-python -c "from mutli_room_agent2 import interactive_session; interactive_session()"
+python -c "from multi_room_agent2 import interactive_session; interactive_session()"
 ```
 
 Example queries:
@@ -226,10 +226,10 @@ python -c "from room_database import SpatialDatabaseCorrect; db = SpatialDatabas
 python -c "from ai_api_wrapper import AiApiWrapper; api = AiApiWrapper(); print(f'✓ API Ready: {api.is_ready}')"
 
 # Test 3: Agent initialization
-python -c "from mutli_room_agent2 import FinalSpatialAIAgent; agent = FinalSpatialAIAgent(); print('✓ Agent OK')"
+python -c "from multi_room_agent2 import FinalSpatialAIAgent; agent = FinalSpatialAIAgent(); print('✓ Agent OK')"
 
 # Test 4: Single query
-python -c "from mutli_room_agent2 import FinalSpatialAIAgent; agent = FinalSpatialAIAgent(); print(agent.query('How many rooms are there?'))"
+python -c "from multi_room_agent2 import FinalSpatialAIAgent; agent = FinalSpatialAIAgent(); print(agent.query('How many rooms are there?'))"
 ```
 
 ---

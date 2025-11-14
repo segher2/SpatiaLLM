@@ -7,7 +7,7 @@ Just activate the venv and run your code:
 ```bash
 cd ~/Documents/College/Synthesis/SpatiaLLM/LM2PCG
 source venv/bin/activate
-python mutli_room_agent2.py
+python multi_room_agent2.py
 ```
 
 You should see `(venv)` appear in your terminal prompt, which means the environment is activated.
@@ -16,7 +16,7 @@ You should see `(venv)` appear in your terminal prompt, which means the environm
 
 ```bash
 # After activating venv (source venv/bin/activate):
-python mutli_room_agent2.py      # Main AI agent
+python multi_room_agent2.py      # Main AI agent
 python room_database.py           # Generate database
 python enrich_room_types.py       # Vision classifier
 ```

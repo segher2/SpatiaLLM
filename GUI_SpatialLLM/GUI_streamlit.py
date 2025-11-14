@@ -1,21 +1,17 @@
-import subprocess
-import psutil
+import base64
+import glob
+import json
 import os
 import re
-import glob
-import base64
-import json
-from PIL import Image
+import time
+
+import psutil
+import requests
 import streamlit as st
 import streamlit.components.v1 as components
-import requests
-import time
-from streamlit_js_eval import streamlit_js_eval
+from PIL import Image
 from dotenv import load_dotenv
-import mutli_room_agent2 as room_agent
-import ai_api_wrapper as ai_wrapper
-import enrich_room_types as enrich_rooms
-import room_database
+import LM2PCG.multi_room_agent2 as room_agent
 
 # Load environment variables from .env file
 # .env is located in LM2PCG/data/configs/
@@ -30,29 +26,29 @@ st.set_page_config(page_title="Spatial Understanding via Multi-Modal LLM", layou
 if 'outputs_cleaned' not in st.session_state:
     import shutil
     from pathlib import Path
-    
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(current_dir)
-    
+
     # Clean SAM23D/outputs (previous segmentation results)
     outputs_dir = Path(root_dir) / "SAM23D" / "outputs"
     if outputs_dir.exists():
         shutil.rmtree(outputs_dir)
         outputs_dir.mkdir(parents=True, exist_ok=True)
         print("✅ Cleaned SAM23D/outputs directory")
-    
+
     st.session_state.outputs_cleaned = True
 
 # Build valid panoramas set from data/output
 if 'valid_panoramas' not in st.session_state:
     from pathlib import Path
-    
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(current_dir)
-    
+
     valid_stems = set()
     data_output_dir = Path(root_dir) / "data" / "output"
-    
+
     if data_output_dir.exists():
         for floor_dir in data_output_dir.glob("floor_*"):
             if not floor_dir.is_dir():
@@ -63,11 +59,11 @@ if 'valid_panoramas' not in st.session_state:
                 # Find all .jpg panorama files in room directory
                 for jpg_file in room_dir.glob("*.jpg"):
                     valid_stems.add(jpg_file.stem)
-        
+
         print(f"✅ Found {len(valid_stems)} valid panoramas in data/output")
     else:
         print(f"⚠️  data/output directory not found")
-    
+
     st.session_state.valid_panoramas = valid_stems
 
 # Styling
@@ -126,7 +122,7 @@ virtual_btn = st.sidebar.button("Virtual Mode", use_container_width=True)
 if start_btn:
     # Reset to main page
     st.session_state.page = "main"
-    
+
     if st.session_state.agent:
         st.warning("Session already active.")
     else:
@@ -134,32 +130,34 @@ if start_btn:
             try:
                 # Use absolute path to database in LM2PCG
                 db_path = os.path.join(SCRIPT_DIR, "..", "LM2PCG", "spatial_rooms.db")
-                
+
                 # Initialize agent with thread-safe check_same_thread=False
                 import sqlite3
                 import pandas as pd
-                
+
                 original_connect = sqlite3.connect
-                
+
+
                 def thread_safe_connect(*args, **kwargs):
                     kwargs['check_same_thread'] = False
                     return original_connect(*args, **kwargs)
-                
+
+
                 sqlite3.connect = thread_safe_connect
-                
+
                 st.session_state.agent = room_agent.FinalSpatialAIAgent(
                     database_path=db_path,
                     use_images=True  # Enable image analysis
                 )
-                
+
                 # Restore original connect
                 sqlite3.connect = original_connect
-                
+
                 # Generate database summary table
                 agent_instance = st.session_state.agent
                 rooms = agent_instance.rooms_df
                 floors = agent_instance.floors_df
-                
+
                 # Build summary table
                 summary_data = []
                 for _, room in rooms.iterrows():
@@ -167,20 +165,20 @@ if start_btn:
                     floor_num = room['floor_number']
                     room_num = room.get('room_number', '???')
                     room_type = room.get('room_type', 'unknown')
-                    
+
                     # Get images count (panoramas)
                     cursor = agent_instance.conn.cursor()
                     cursor.execute("SELECT COUNT(*) FROM images WHERE room_id = ?", (room_id,))
                     image_count = cursor.fetchone()[0]
-                    
+
                     # Get planes count
                     cursor.execute("SELECT COUNT(*) FROM planes WHERE room_id = ?", (room_id,))
                     plane_count = cursor.fetchone()[0]
-                    
+
                     # Get objects count
                     cursor.execute("SELECT COUNT(*) FROM objects WHERE room_id = ?", (room_id,))
                     obj_count = cursor.fetchone()[0]
-                    
+
                     summary_data.append({
                         "Room ID": room_id,
                         "Floor": floor_num,
@@ -190,13 +188,13 @@ if start_btn:
                         "Images": image_count,
                         "Planes": plane_count
                     })
-                
+
                 summary_df = pd.DataFrame(summary_data)
-                
+
                 welcome_msg = "🏠 **Spatial AI Agent Initialized Successfully!**\n\n"
                 welcome_msg += f"**Database:** {len(floors)} floors, {len(rooms)} rooms\n\n"
                 welcome_msg += "**Room Summary Table:**"
-                
+
                 # Store the summary dataframe in session state
                 st.session_state.summary_df = summary_df
                 st.session_state.chat_ui = [("assistant", welcome_msg)]
@@ -209,35 +207,37 @@ elif restart_btn:
         try:
             # Reset to main page
             st.session_state.page = "main"
-            
+
             # Use absolute path to database in LM2PCG
             db_path = os.path.join(SCRIPT_DIR, "..", "LM2PCG", "spatial_rooms.db")
-            
+
             # Initialize agent with thread-safe check_same_thread=False
             import sqlite3
             import pandas as pd
-            
+
             original_connect = sqlite3.connect
-            
+
+
             def thread_safe_connect(*args, **kwargs):
                 kwargs['check_same_thread'] = False
                 return original_connect(*args, **kwargs)
-            
+
+
             sqlite3.connect = thread_safe_connect
-            
+
             st.session_state.agent = room_agent.FinalSpatialAIAgent(
                 database_path=db_path,
                 use_images=True  # Enable image analysis
             )
-            
+
             # Restore original connect
             sqlite3.connect = original_connect
-            
+
             # Generate database summary table
             agent_instance = st.session_state.agent
             rooms = agent_instance.rooms_df
             floors = agent_instance.floors_df
-            
+
             # Build summary table
             summary_data = []
             for _, room in rooms.iterrows():
@@ -245,20 +245,20 @@ elif restart_btn:
                 floor_num = room['floor_number']
                 room_num = room.get('room_number', '???')
                 room_type = room.get('room_type', 'unknown')
-                
+
                 # Get images count (panoramas)
                 cursor = agent_instance.conn.cursor()
                 cursor.execute("SELECT COUNT(*) FROM images WHERE room_id = ?", (room_id,))
                 image_count = cursor.fetchone()[0]
-                
+
                 # Get planes count
                 cursor.execute("SELECT COUNT(*) FROM planes WHERE room_id = ?", (room_id,))
                 plane_count = cursor.fetchone()[0]
-                
+
                 # Get objects count
                 cursor.execute("SELECT COUNT(*) FROM objects WHERE room_id = ?", (room_id,))
                 obj_count = cursor.fetchone()[0]
-                
+
                 summary_data.append({
                     "Room ID": room_id,
                     "Floor": floor_num,
@@ -268,13 +268,13 @@ elif restart_btn:
                     "Images": image_count,
                     "Planes": plane_count
                 })
-            
+
             summary_df = pd.DataFrame(summary_data)
-            
+
             welcome_msg = "🔄 **Spatial AI Agent Restarted Successfully!**\n\n"
             welcome_msg += f"**Database:** {len(floors)} floors, {len(rooms)} rooms\n\n"
             welcome_msg += "**Room Summary Table:**"
-            
+
             # Store the summary dataframe in session state
             st.session_state.summary_df = summary_df
             st.session_state.chat_ui = [("assistant", welcome_msg)]
@@ -288,7 +288,7 @@ elif end_btn:
     st.session_state.page = "main"
     st.session_state.agent = None
     st.session_state.chat_ui = []
-    
+
     st.sidebar.warning("🛑 Preparing to end session...")
 
     countdown_placeholder = st.empty()
@@ -352,21 +352,21 @@ if not check_bridge_server():
 if st.session_state.page == "virtual":
     # Use absolute path based on script location (SCRIPT_DIR already defined above)
     PANOS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "data", "input", "panoramas", "images")
-    
+
     # Get all panorama files
     all_pano_files = sorted(
         glob.glob(os.path.join(PANOS_DIR, "*.jpg"))
         + glob.glob(os.path.join(PANOS_DIR, "*.jpeg"))
         + glob.glob(os.path.join(PANOS_DIR, "*.png"))
     )
-    
+
     # Filter to only include panoramas that exist in data/output
     valid_panoramas = st.session_state.get('valid_panoramas', set())
     pano_files = [
-        f for f in all_pano_files 
+        f for f in all_pano_files
         if os.path.splitext(os.path.basename(f))[0] in valid_panoramas
     ]
-    
+
     # Log filtering results
     if len(all_pano_files) != len(pano_files):
         filtered_count = len(all_pano_files) - len(pano_files)
@@ -747,9 +747,9 @@ if st.session_state.page == "virtual":
     if st.button("← Back to Chat Mode", key="back_to_main"):
         st.session_state.page = "main"
         st.rerun()
-    
+
     st.divider()
-    
+
     n = len(pano_files)
     current_idx = st.session_state.pano_idx = wrap_idx(st.session_state.pano_idx, n)
     current_path = pano_files[current_idx]
@@ -826,7 +826,7 @@ if st.session_state.page == "virtual":
                     st.rerun()
         except:
             pass  # Ignore errors during polling
-    
+
     # Display selected points
     if st.session_state.clicked_points:
         w, h = Image.open(current_path).size

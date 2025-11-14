@@ -1,1 +1,0 @@
-../SAM23D/select_points_in_mask.py
