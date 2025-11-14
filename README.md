@@ -261,9 +261,6 @@ data/output/
 
 ## 🐛 Troubleshooting
 
-### CGAL Version Issues
-If CGAL < 5.3, mesh processing tools will be skipped. See [LM2PCG/docs/CGAL_VERSION_TROUBLESHOOTING.md](./LM2PCG/docs/CGAL_VERSION_TROUBLESHOOTING.md)
-
 ### Windows Issues
 - Use Git Bash or WSL (PowerShell/CMD not supported)
 - Ensure bash is available in PATH
